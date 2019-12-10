@@ -148,6 +148,7 @@ func main() {
 	}
 
 	keywordToFile := make(map[string][]string)
+
 	for _, taggedFile := range matchingTaggedFiles {
 		for _, tag := range taggedFile.tags {
 			keywordToFile[tag] = append(keywordToFile[tag], taggedFile.filename)
