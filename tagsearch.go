@@ -136,12 +136,12 @@ func main() {
 	}
 	var err error
 	if *files == nil {
-		*files, err = doublestar.Glob("**.txt")
+		*files, err = doublestar.Glob("**/*txt")
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
-		filesMd, err := doublestar.Glob("**.md")
+		filesMd, err := doublestar.Glob("**/*md")
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 		}
