@@ -13,7 +13,7 @@ import (
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
-const VERSION = "0.4.0"
+const VERSION = "0.5.0"
 
 var (
 	list        = kingpin.Flag("list", "List tags").Short('l').Bool()

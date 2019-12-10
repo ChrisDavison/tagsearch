@@ -11,7 +11,7 @@ Less	taglist.go	/^func (t taglistWithCount) Less(i, j int) bool {$/;"	f
 Matches	bitstring_filter.go	/^func (b bitstringFilter) Matches(keywordsForFile []string) bool {$/;"	f
 NewBitstringFilter	bitstring_filter.go	/^func NewBitstringFilter(keywords []string, orMode bool) bitstringFilter {$/;"	f
 Swap	taglist.go	/^func (t taglistWithCount) Swap(i, j int) {$/;"	f
-VERSION	main.go	/^const VERSION = "0.4.0"$/;"	c
+VERSION	main.go	/^const VERSION = "0.5.0"$/;"	c
 bitstringFilter	bitstring_filter.go	/^type bitstringFilter struct {$/;"	t
 countedKeyword	main.go	/^type countedKeyword struct {$/;"	t
 countedKeywords	main.go	/^type countedKeywords []countedKeyword$/;"	t
