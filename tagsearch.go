@@ -14,18 +14,6 @@ import (
 
 const VERSION = "0.3.0"
 
-const USAGE = `usage: tagsearch [-h|-v|-l] <FILES>... (-f <keywords>...)
-
-Search/list tags in files. Tags are taken as '@' followed by anything in the 
-character class [a-zA-Z0-9_\-].
-
-Options:
-	-l                 List tags
-	-v                 List tags verbosely (tag and number of files containing tag)
-	-h                 Show this help message
-	-f <keywords>...   Keywords to find
-`
-
 var (
 	list      = kingpin.Flag("list", "List tags").Short('l').Bool()
 	verbose   = kingpin.Flag("verbose", "List tags with count of files").Short('v').Bool()
