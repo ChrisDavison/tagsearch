@@ -4,13 +4,15 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
 
+	"github.com/bmatcuk/doublestar"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
+
+const VERSION = "0.2.0"
 
 const USAGE = `usage: tagsearch [-h|-v|-l] <FILES>... (-f <keywords>...)
 
@@ -129,12 +131,12 @@ func main() {
 	kingpin.Parse()
 	var err error
 	if *files == nil {
-		*files, err = filepath.Glob("**/*.txt")
+		*files, err = doublestar.Glob("**/*.txt")
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
-		filesMd, err := filepath.Glob("**/*.md")
+		filesMd, err := doublestar.Glob("**/*.md")
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 		}
