@@ -12,7 +12,7 @@ import (
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
-const VERSION = "0.2.0"
+const VERSION = "0.3.0"
 
 const USAGE = `usage: tagsearch [-h|-v|-l] <FILES>... (-f <keywords>...)
 
@@ -33,6 +33,7 @@ var (
 	files     = kingpin.Arg("files", "Files to search/summarise").Strings()
 	keywords  = kingpin.Flag("keywords", "Keywords to filter for").Short('k').Strings()
 	andFilter = kingpin.Flag("and-filter", "Filter using ALL tags (or default ANY match)").Bool()
+	version   = kingpin.Flag("version", "Show version").Bool()
 )
 
 func getAllTags(files []string) taglistWithCount {
@@ -72,7 +73,7 @@ func getTagsForFile(filename string) []string {
 		fmt.Fprintln(os.Stderr, err)
 		return []string{}
 	}
-	rx := regexp.MustCompile(`(?:^|\s)+@([a-zA-Z_0-9\-]+)\s*`)
+	rx := regexp.MustCompile(`(?:^|\s)@([a-zA-Z_0-9\-]+)`)
 	matches := rx.FindAllStringSubmatch(string(contents), -1)
 	matchesSeen := make(map[string]bool)
 	for _, match := range matches {
@@ -129,14 +130,18 @@ func keywordMapAnd(keywordToFile map[string][]string, keywords []string) []strin
 
 func main() {
 	kingpin.Parse()
+	if *version {
+		fmt.Printf("tagsearch v%s\n", VERSION)
+		os.Exit(0)
+	}
 	var err error
 	if *files == nil {
-		*files, err = doublestar.Glob("**/*.txt")
+		*files, err = doublestar.Glob("**.txt")
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
-		filesMd, err := doublestar.Glob("**/*.md")
+		filesMd, err := doublestar.Glob("**.md")
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 		}
