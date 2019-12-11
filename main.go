@@ -79,17 +79,19 @@ func getTagsForFile(filename string) []string {
 	}
 	rx := regexp.MustCompile(`(?:^|\s)@([a-zA-Z_0-9\-]+)`)
 	matches := rx.FindAllStringSubmatch(string(contents), -1)
+	// Use a map of string to bool, just to check that we don't duplicate tags
 	matchesSeen := make(map[string]bool)
+	keywordsForFile := make([]string, 0)
 	for _, match := range matches {
-		for _, keyword := range match[1:] {
+		// Match will only ever be [FULLMATCH, CAPTUREGROUP]
+		// so just extract capturegroup
+		keyword := match[1]
+		if _, ok := matchesSeen[keyword]; !ok {
 			matchesSeen[keyword] = true
+			keywordsForFile = append(keywordsForFile, strings.ToLower(keyword))
 		}
 	}
-	onlyGroups := make([]string, 0)
-	for kw, _ := range matchesSeen {
-		onlyGroups = append(onlyGroups, strings.ToLower(kw))
-	}
-	return onlyGroups
+	return keywordsForFile
 }
 
 type fileAndTags struct {
