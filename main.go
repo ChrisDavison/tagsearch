@@ -145,6 +145,10 @@ func main() {
 	if *list || *longList || *summarise || *keywords == nil {
 		listTags(keywordToFile, *summarise, *longList, *numericSort)
 	} else {
+		sort.SliceStable(matchingTaggedFiles, func(i, j int) bool {
+			return matchingTaggedFiles[i].filename < matchingTaggedFiles[j].filename
+		})
+
 		for _, taggedFile := range matchingTaggedFiles {
 			fmt.Println(taggedFile.filename)
 		}
