@@ -13,7 +13,8 @@ import (
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
-const VERSION = "0.7.0"
+// VERSION is the current version of the software
+const VERSION = "0.7.1"
 
 var (
 	list        = kingpin.Flag("list", "List tags").Short('l').Bool()
@@ -48,7 +49,7 @@ func listTags(filesForKeyword map[string][]string, summarise, longList, numericS
 		})
 	}
 
-	tagnamesAndCountsStrings := make([]string, 0)
+	var tagnamesAndCountsStrings []string
 	for _, ck := range countedKeywordList {
 		kwTitle := ck.kw
 		if numericSort {
@@ -82,7 +83,7 @@ func getTagsForFile(filename string) []string {
 	matches := rx.FindAllStringSubmatch(string(contents), -1)
 	// Use a map of string to bool, just to check that we don't duplicate tags
 	matchesSeen := make(map[string]bool)
-	keywordsForFile := make([]string, 0)
+	var keywordsForFile []string
 	for _, match := range matches {
 		// Match will only ever be [FULLMATCH, CAPTUREGROUP]
 		// so just extract capturegroup
@@ -126,9 +127,9 @@ func main() {
 		log.Fatal(err)
 	}
 
-	filter := NewFilter(*keywords, *orFilter)
+	filter := newFilter(*keywords, *orFilter)
 	matchingTaggedFiles := make([]fileAndTags, 0)
-	untaggedFiles := make([]string, 0)
+	var untaggedFiles []string
 	for _, fn := range files {
 		tags := getTagsForFile(fn)
 		if len(tags) == 0 {

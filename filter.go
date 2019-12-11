@@ -1,17 +1,18 @@
 package main
 
+// Enum to handle the file mode
 const (
-	FILTER_AND = iota
-	FILTER_OR
+	filterAnd = iota
+	filterOr
 )
 
 type filter struct {
 	keywordMapGood map[string]bool
 	keywordMapBad  map[string]bool
-	filterMode     int
+	filterUsingOr  bool
 }
 
-func NewFilter(keywords []string, orMode bool) filter {
+func newFilter(keywords []string, orMode bool) filter {
 	goodWords := make(map[string]bool)
 	badWords := make(map[string]bool)
 	for _, word := range keywords {
@@ -21,11 +22,7 @@ func NewFilter(keywords []string, orMode bool) filter {
 			goodWords[word] = true
 		}
 	}
-	filterMode := FILTER_OR
-	if !orMode {
-		filterMode = FILTER_AND
-	}
-	return filter{goodWords, badWords, filterMode}
+	return filter{goodWords, badWords, orMode}
 }
 
 func (b filter) Matches(keywordsForFile []string) bool {
@@ -39,16 +36,16 @@ func (b filter) Matches(keywordsForFile []string) bool {
 		}
 		// if keyword is one of the 'good' words, increment goodword match
 		if _, ok := b.keywordMapGood[keyword]; ok {
-			matchingKeywords += 1
+			matchingKeywords++
 		}
 	}
 	if numKeywords == 0 {
 		return true
 	}
-	if b.filterMode == FILTER_OR && matchingKeywords > 0 {
+	if b.filterUsingOr && matchingKeywords > 0 {
 		// if an 'or' filter, and we have any positive match, return 'true'
 		return true
-	} else if b.filterMode == FILTER_AND && matchingKeywords >= numKeywords {
+	} else if !b.filterUsingOr && matchingKeywords >= numKeywords {
 		// if an 'and' filter, and we have the same number of keywords as required, 'true'
 		return true
 	}
