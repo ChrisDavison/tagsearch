@@ -58,9 +58,11 @@ Install
 
 ### Dependencies
 
--   [kingpin][] (for CLI flag parsing)
+-   [kingpin][], for CLI flag parsing
+-   [doublestar][], for recursive file globbing
 
   [kingpin]: https://github.com/alecthomas/kingpin
+  [doublestar]: https://github.com/bmatcuk/doublestar
 
 ## Usage
 
@@ -76,6 +78,7 @@ Current usage string:
     -s, --summarise  List tags and matching files
         --or-filter  Filter using ANY tags, rather than ALL
         --version    Show version
+        --untagged   List files without tags
 
     Args:
     [<keyword>]  Keywords to filter (prepend '!' to ignore keyword)
