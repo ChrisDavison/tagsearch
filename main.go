@@ -148,14 +148,18 @@ func main() {
 		}
 	}
 
-	if *untagged {
+	switch {
+	case *untagged:
 		sort.Strings(untaggedFiles)
 		for _, fn := range untaggedFiles {
 			fmt.Println(fn)
 		}
-	} else if *list || *longList || *summarise || *keywords == nil {
+	case *keywords == nil:
+		fmt.Println(len(untaggedFiles), "untagged files. View with `tagsearch --untagged`.\n")
+		fallthrough
+	case *list, *longList, *summarise:
 		listTags(keywordToFile, *summarise, *longList, *numericSort)
-	} else {
+	default:
 		sort.SliceStable(matchingTaggedFiles, func(i, j int) bool {
 			return matchingTaggedFiles[i].filename < matchingTaggedFiles[j].filename
 		})
