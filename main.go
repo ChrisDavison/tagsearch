@@ -13,7 +13,7 @@ import (
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
-const VERSION = "0.5.0"
+const VERSION = "0.6.0"
 
 var (
 	list        = kingpin.Flag("list", "List tags").Short('l').Bool()
@@ -24,21 +24,6 @@ var (
 	version     = kingpin.Flag("version", "Show version").Bool()
 	keywords    = kingpin.Arg("keyword", "Keywords to filter (prepend '!' to ignore keyword)").Strings()
 )
-
-func getAllTags(files []string) taglistWithCount {
-	tagsSeen := make(map[string]int)
-	for _, filename := range files {
-		for _, tag := range getTagsForFile(filename) {
-			tagsSeen[tag] += 1
-		}
-	}
-	taglist := make(taglistWithCount, 0)
-	for tag, count := range tagsSeen {
-		taglist = append(taglist, tagWithCount{tag, count})
-	}
-	sort.Sort(sort.Reverse(taglist))
-	return taglist
-}
 
 type countedKeyword struct {
 	kw    string
@@ -138,7 +123,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	filter := NewBitstringFilter(*keywords, *orFilter)
+	filter := NewFilter(*keywords, *orFilter)
 	matchingTaggedFiles := make([]fileAndTags, 0)
 	for _, fn := range files {
 		tags := getTagsForFile(fn)

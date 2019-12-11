@@ -5,13 +5,13 @@ const (
 	FILTER_OR
 )
 
-type bitstringFilter struct {
+type filter struct {
 	keywordMapGood map[string]bool
 	keywordMapBad  map[string]bool
 	filterMode     int
 }
 
-func NewBitstringFilter(keywords []string, orMode bool) bitstringFilter {
+func NewFilter(keywords []string, orMode bool) filter {
 	goodWords := make(map[string]bool)
 	badWords := make(map[string]bool)
 	for _, word := range keywords {
@@ -25,10 +25,10 @@ func NewBitstringFilter(keywords []string, orMode bool) bitstringFilter {
 	if !orMode {
 		filterMode = FILTER_AND
 	}
-	return bitstringFilter{goodWords, badWords, filterMode}
+	return filter{goodWords, badWords, filterMode}
 }
 
-func (b bitstringFilter) Matches(keywordsForFile []string) bool {
+func (b filter) Matches(keywordsForFile []string) bool {
 	numKeywords := len(b.keywordMapGood)
 	matchingKeywords := 0
 	for _, keyword := range keywordsForFile {
