@@ -13,14 +13,14 @@ import (
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
-const VERSION = "0.6.0"
+const VERSION = "0.7.0"
 
 var (
 	list        = kingpin.Flag("list", "List tags").Short('l').Bool()
 	longList    = kingpin.Flag("long", "Long (tall) list of tags").Bool()
 	numericSort = kingpin.Flag("numeric", "When listing, sort by number of tags, and show number").Short('n').Bool()
 	summarise   = kingpin.Flag("summarise", "List tags and matching files").Short('s').Bool()
-	orFilter    = kingpin.Flag("or-filter", "Filter using ANY tags, rather than ALL").Bool()
+	orFilter    = kingpin.Flag("OR", "Filter using ANY tags, rather than ALL").Bool()
 	version     = kingpin.Flag("version", "Show version").Bool()
 	untagged    = kingpin.Flag("untagged", "List files without tags").Bool()
 	keywords    = kingpin.Arg("keyword", "Keywords to filter (prepend '!' to ignore keyword)").Strings()

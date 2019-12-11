@@ -76,7 +76,7 @@ Current usage string:
         --long       Long (tall) list of tags
     -n, --numeric    When listing, sort by number of tags, and show number
     -s, --summarise  List tags and matching files
-        --or-filter  Filter using ANY tags, rather than ALL
+        --OR         Filter matching a OR b OR c, not a AND b AND c
         --version    Show version
         --untagged   List files without tags
 
@@ -92,6 +92,6 @@ Examples
     tagsearch golang          # Show files tagged 'golang'
     tagsearch -l golang       # List all tags associated with files tagged 'golang'
     tagsearch rust '!video'   # Show files tagged 'rust', but NOT tagged 'video'
-    tagsearch --or-filter spanish espanol   # Show files that match spanish OR espanol
+    tagsearch --OR spanish espanol   # Show files that match spanish OR espanol
 
 Note that you must wrap *not*-filters in quotes, as shells often do something special with `!`
