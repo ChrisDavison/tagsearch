@@ -14,7 +14,7 @@ import (
 )
 
 // VERSION is the current version of the software
-const VERSION = "0.7.1"
+const VERSION = "0.8.0"
 
 var (
 	list        = kingpin.Flag("list", "List tags").Short('l').Bool()
@@ -96,11 +96,6 @@ func getTagsForFile(filename string) []string {
 	return keywordsForFile
 }
 
-type fileAndTags struct {
-	filename string
-	tags     []string
-}
-
 func getFileList() ([]string, error) {
 	files, err := doublestar.Glob("**/*txt")
 	if err != nil {
@@ -128,23 +123,20 @@ func main() {
 	}
 
 	filter := newFilter(*keywords, *orFilter)
-	matchingTaggedFiles := make([]fileAndTags, 0)
+	keywordToFile := make(map[string][]string)
 	var untaggedFiles []string
+	var matchingFiles []string
 	for _, fn := range files {
 		tags := getTagsForFile(fn)
 		if len(tags) == 0 {
 			untaggedFiles = append(untaggedFiles, fn)
 		}
 		if filter.Matches(tags) {
-			matchingTaggedFiles = append(matchingTaggedFiles, fileAndTags{fn, tags})
-		}
-	}
+			matchingFiles = append(matchingFiles, fn)
+			for _, tag := range tags {
+				keywordToFile[tag] = append(keywordToFile[tag], fn)
+			}
 
-	keywordToFile := make(map[string][]string)
-
-	for _, taggedFile := range matchingTaggedFiles {
-		for _, tag := range taggedFile.tags {
-			keywordToFile[tag] = append(keywordToFile[tag], taggedFile.filename)
 		}
 	}
 
@@ -162,12 +154,10 @@ func main() {
 	case *list, *longList, *summarise:
 		listTags(keywordToFile, *summarise, *longList, *numericSort)
 	default:
-		sort.SliceStable(matchingTaggedFiles, func(i, j int) bool {
-			return matchingTaggedFiles[i].filename < matchingTaggedFiles[j].filename
-		})
+		sort.Strings(matchingFiles)
 
-		for _, taggedFile := range matchingTaggedFiles {
-			fmt.Println(taggedFile.filename)
+		for _, filename := range matchingFiles {
+			fmt.Println(filename)
 		}
 	}
 }
