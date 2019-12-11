@@ -89,3 +89,8 @@ Examples
     tagsearch --long          # to show a tall list of tags
     tagsearch --long -n       # Tall list, with count of files for each tag
     tagsearch --summarise     # Show each tag, and the files for each tag
+    tagsearch golang          # Show files tagged 'golang'
+    tagsearch -l golang       # List all tags associated with files tagged 'golang'
+    tagsearch rust '!video'   # Show files tagged 'rust', but NOT tagged 'video'
+
+Note that you must wrap *not*-filters in quotes, as shells often do something special with `!`
