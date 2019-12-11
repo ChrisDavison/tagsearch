@@ -155,7 +155,9 @@ func main() {
 			fmt.Println(fn)
 		}
 	case *keywords == nil:
-		fmt.Println(len(untaggedFiles), "untagged files. View with `tagsearch --untagged`.\n")
+		if len(untaggedFiles) > 0 {
+			fmt.Println(len(untaggedFiles), "untagged files. View with `tagsearch --untagged`.\n")
+		}
 		fallthrough
 	case *list, *longList, *summarise:
 		listTags(keywordToFile, *summarise, *longList, *numericSort)
