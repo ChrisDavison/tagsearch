@@ -1,9 +1,42 @@
-# Tagsearch
+# Tagsearch - Search for, and/or summarise, tags in plaintext files.
 
-Search for, and/or summarise, tags (`@keyword`) in plaintext files.
+## Introduction
 
-This is a utility which should help drive my move to managing most things in
-plaintext.
+This finds all instances of `@ALPHANUMERIC` (e.g. roughly matches the regex
+`@[a-zA-Z0-9]`) across `.txt` and `.md` recursively under the current directory.
+
+The *purpose* of this script is to basically let me manage information in
+plaintext much more easily. I've added a separate file giving [a rough overview
+of how I apply it to different usecases][].
+
+  [a rough overview of how I apply it to different usecases]: ./use_cases.md
+
+## Motivation
+
+A prime motivation was to move away from more commercial software. Even though I
+can afford to use a few subscription services, I feel like it's better to
+simplify my processes down. This has multiple benefits:
+
+-   saving money; not subscribing to as many services
+-   no vendor lock-in; don't need to worry about losing my data if a vendor goes
+    out of business, or changes their pricing model
+-   less 'failure modes'; with a simple plaintext system, built the way I want
+    it to, I don't have to worry about all the interactions or working the way
+    that other software requires me to. Everything is basically human readable,
+    with a few helper scripts to handle the data in different ways.
+-   portability; I don't need to worry about finding an app that works across
+    Windows, OSX, and Linux. I can realistically access my data across any
+    device that can handle text files. Every device I currently work with has
+    the ability to search within files, so even without tools such as this, I
+    can still filter my information down.
+
+The main bit of commercial software I still use is *Dropbox*, so I can get
+information across all my devices without having to worry about doing things
+like syncing git. I do however have a cronjob which backs up this information to
+git. One change this makes to my process is using the file extension `.txt`
+instead of `.md` for my markdown files; this simply lets me utilise Dropbox's
+full-text search from the web or android app to find information when I don't
+have access to a terminal and my own helper scripts.
 
 ## Installation
 
@@ -53,45 +86,3 @@ Examples
     tagsearch --long          # to show a tall list of tags
     tagsearch --long -n       # Tall list, with count of files for each tag
     tagsearch --summarise     # Show each tag, and the files for each tag
-
-## Use-cases
-
-### Academic Literature
-
-I have pdfs of academic literature saved. Now, I use a fish shell helper
-function that: 1) downloads a pdf, 2) renames the pdf to whatever I input, in a
-folder `papers`, 3) creates a txt file with the same name as the pdf, in folder
-`writeups`, with the tag `@unread`. I can optionally ad more tags.
-
-This then lets me use `tagsearch unread neuralnet` to find any paper related to
-neural nets that I've not read yet, or `tagsearch -l neuralnet` to see all tags
-that also exist with the `neuralnet` tag.
-
-### Finance
-
-I keep a folder called `budget`, that contains files of the form:
-
-    title: WHAT I BOUGHT
-    value: A NUMBER
-    date: WHEN I BOUGHT IT
-
-    @monthly @health
-
-I can then use tagsearch to see what I often spend monthly on
-`tagsearch -l @monthly`, or do some pipelining to calculate some sums (using
-fish-shell syntax):
-
-    awk -F':' '/^value:/{total+=$2} END{print $total}' < (cat (tagsearch @monthly))
-
-...this approach is not quite as fleshed out as the academic literature
-
-### Quantified-Self
-
-Similarly to the [finance][] approach, but `value` is now one such as `50` (for
-my `20191210--shoulderpress.txt` weight lifting entry, number of reps). I can
-then either do `cat (tagsearch weights shoulder)` to print out all the contents
-of any of my shoulderpress progress.
-
-...this approach is not quite as fleshed out as the academic literature
-
-  [finance]: #finance
