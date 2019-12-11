@@ -22,6 +22,7 @@ var (
 	summarise   = kingpin.Flag("summarise", "List tags and matching files").Short('s').Bool()
 	orFilter    = kingpin.Flag("or-filter", "Filter using ANY tags, rather than ALL").Bool()
 	version     = kingpin.Flag("version", "Show version").Bool()
+	untagged    = kingpin.Flag("untagged", "List files without tags").Bool()
 	keywords    = kingpin.Arg("keyword", "Keywords to filter (prepend '!' to ignore keyword)").Strings()
 )
 
@@ -127,8 +128,12 @@ func main() {
 
 	filter := NewFilter(*keywords, *orFilter)
 	matchingTaggedFiles := make([]fileAndTags, 0)
+	untaggedFiles := make([]string, 0)
 	for _, fn := range files {
 		tags := getTagsForFile(fn)
+		if len(tags) == 0 {
+			untaggedFiles = append(untaggedFiles, fn)
+		}
 		if filter.Matches(tags) {
 			matchingTaggedFiles = append(matchingTaggedFiles, fileAndTags{fn, tags})
 		}
@@ -142,7 +147,12 @@ func main() {
 		}
 	}
 
-	if *list || *longList || *summarise || *keywords == nil {
+	if *untagged {
+		sort.Strings(untaggedFiles)
+		for _, fn := range untaggedFiles {
+			fmt.Println(fn)
+		}
+	} else if *list || *longList || *summarise || *keywords == nil {
 		listTags(keywordToFile, *summarise, *longList, *numericSort)
 	} else {
 		sort.SliceStable(matchingTaggedFiles, func(i, j int) bool {
