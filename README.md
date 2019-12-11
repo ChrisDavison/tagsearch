@@ -92,5 +92,6 @@ Examples
     tagsearch golang          # Show files tagged 'golang'
     tagsearch -l golang       # List all tags associated with files tagged 'golang'
     tagsearch rust '!video'   # Show files tagged 'rust', but NOT tagged 'video'
+    tagsearch --or-filter spanish espanol   # Show files that match spanish OR espanol
 
 Note that you must wrap *not*-filters in quotes, as shells often do something special with `!`
