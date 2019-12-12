@@ -58,37 +58,41 @@ Install
 
 ### Dependencies
 
--   [kingpin][], for CLI flag parsing
--   [doublestar][], for recursive file globbing
-
-  [kingpin]: https://github.com/alecthomas/kingpin
-  [doublestar]: https://github.com/bmatcuk/doublestar
+    regex = "1"
+    glob = "0.3.0"
+    lazy_static = "1.4.0"
+    structopt = "0.3.3"
 
 ## Usage
 
 Current usage string:
 
-    usage: tagsearch [<flags>] [<keyword>...]
+    tagsearch 0.9.0
+    search for, and/or summarise, tags in plaintext files
 
-    Flags:
-        --help       Show context-sensitive help (also try --help-long and --help-man).
-    -l, --list       List tags
-        --long       Long (tall) list of tags
+    USAGE:
+        tagsearch [FLAGS] [keywords]...
+
+    FLAGS:
+        -h, --help         Prints help information
+        -l, --list         List all tags for files matching keywords
+            --long         Long list (e.g. tall) all tags for files matching keywords
+        -o, --or-filter    Filter using ANY, rather than ALL keywords
+        -u, --untagged     Show untagged files
+        -V, --version      Prints version information
+
+    ARGS:
+        <keywords>...    Keywords to filter by (prefix with ! for negative-match)
+
+Unimplemented (as of yet), after change to rust:
+
     -n, --numeric    When listing, sort by number of tags, and show number
     -s, --summarise  List tags and matching files
-        --OR         Filter matching a OR b OR c, not a AND b AND c
-        --version    Show version
-        --untagged   List files without tags
-
-    Args:
-    [<keyword>]  Keywords to filter (prepend '!' to ignore keyword)
 
 Examples
 
     tagsearch                 # defaults to -l|--long
     tagsearch --long          # to show a tall list of tags
-    tagsearch --long -n       # Tall list, with count of files for each tag
-    tagsearch --summarise     # Show each tag, and the files for each tag
     tagsearch golang          # Show files tagged 'golang'
     tagsearch -l golang       # List all tags associated with files tagged 'golang'
     tagsearch rust '!video'   # Show files tagged 'rust', but NOT tagged 'video'
