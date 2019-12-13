@@ -19,7 +19,7 @@ type Result<T> = std::result::Result<T, Box<dyn ::std::error::Error>>;
 #[structopt(
     name = "tagsearch",
     about = "search for, and/or summarise, tags in plaintext files",
-    version = "0.9.0"
+    version = "0.9.1"
 )]
 struct Opt {
     /// Keywords to filter by (prefix with ! for negative-match)
