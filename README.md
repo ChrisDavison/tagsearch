@@ -42,19 +42,15 @@ have access to a terminal and my own helper scripts.
 
 Download the repo
 
-    go get github.com/chrisdavison/tagsearch
+    git clone git@github.com:Chrisdavison/tagsearch
 
 Change to the repo directory
 
-    cd $GOPATH/src/github.com/ChrisDavison/tagsearch
+    cd tagsearch
 
-Download dependencies
+Build and install
 
-    go get
-
-Install
-
-    go install
+    cargo install --path . --force
 
 ### Dependencies
 
