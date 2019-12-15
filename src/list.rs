@@ -1,15 +1,14 @@
 use super::*;
 
 pub fn tags_matching_tag_query(f: filter::Filter, long_list: bool) -> Result<()> {
-    let mut tagset: HashSet<String> = HashSet::new();
+    let mut tagset: Set<String> = Set::new();
     for entry in super::get_files()? {
         let tags = get_tags_for_file(&entry);
         if f.matches(&tags) {
             tagset.extend(tags);
         }
     }
-    let mut tagkeys = tagset.iter().cloned().collect::<Vec<String>>();
-    tagkeys.sort();
+    let tagkeys = tagset.iter().cloned().collect::<Vec<String>>();
     let joinchar = if long_list { "\n" } else { ", " };
     println!("{}", tagkeys.join(joinchar));
 

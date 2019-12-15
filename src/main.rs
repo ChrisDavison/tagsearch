@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::BTreeSet as Set;
 use std::fs::File;
 use std::io::Read;
 use std::path::PathBuf;
@@ -82,7 +82,7 @@ fn get_tags_for_file(filename: &PathBuf) -> Vec<String> {
     let mut contents = String::new();
     file.read_to_string(&mut contents)
         .expect("Couldn't read contents of file");
-    let mut keywords = HashSet::new();
+    let mut keywords = Set::new();
     for cap in RE.captures_iter(&contents) {
         keywords.insert(cap["keyword"].to_string());
     }
