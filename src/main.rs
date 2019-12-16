@@ -43,6 +43,10 @@ struct Opt {
     /// Show untagged files
     #[structopt(short, long)]
     untagged: bool,
+
+    /// Show similar tags
+    #[structopt(long)]
+    similar_tags: bool,
 }
 
 fn main() -> Result<()> {
@@ -56,6 +60,8 @@ fn main() -> Result<()> {
 
     if args.untagged {
         list::untagged_files()?;
+    } else if args.similar_tags {
+        list::similar_tags()?;
     } else if args.list || args.keywords.is_empty() {
         list::tags_matching_tag_query(f, args.long)?;
     } else {
