@@ -5,7 +5,7 @@ use std::collections::BTreeSet as Set;
 
 pub fn tags_matching_tag_query(f: filter::Filter, long_list: bool) -> Result<()> {
     let mut tagset: Set<String> = Set::new();
-    for entry in get_files()? {
+    for entry in get_files(None)? {
         let tags = get_tags_for_file(&entry);
         if f.matches(&tags) {
             tagset.extend(tags);
@@ -19,7 +19,7 @@ pub fn tags_matching_tag_query(f: filter::Filter, long_list: bool) -> Result<()>
 }
 
 pub fn files_matching_tag_query(f: filter::Filter) -> Result<()> {
-    let matching_files: Vec<String> = get_files()?
+    let matching_files: Vec<String> = get_files(None)?
         .iter()
         .map(|fname| (fname, get_tags_for_file(&fname)))
         .filter(|(_, tags)| f.matches(tags))
@@ -31,7 +31,7 @@ pub fn files_matching_tag_query(f: filter::Filter) -> Result<()> {
 }
 
 pub fn untagged_files() -> Result<()> {
-    for entry in get_files()? {
+    for entry in get_files(None)? {
         if get_tags_for_file(&entry).is_empty() {
             println!("{:?}", entry);
         }
@@ -41,7 +41,7 @@ pub fn untagged_files() -> Result<()> {
 
 pub fn similar_tags() -> Result<()> {
     let mut tagset: Set<String> = Set::new();
-    for entry in get_files()? {
+    for entry in get_files(None)? {
         let tags = get_tags_for_file(&entry);
         tagset.extend(tags);
     }

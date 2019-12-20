@@ -9,9 +9,13 @@ use regex::Regex;
 
 pub type Result<T> = std::result::Result<T, Box<dyn ::std::error::Error>>;
 
-pub fn get_files() -> Result<Vec<PathBuf>> {
-    Ok(glob("**/*.txt")?
-        .chain(glob("**/*.md")?)
+pub fn get_files(root: Option<String>) -> Result<Vec<PathBuf>> {
+    let dir = match root {
+        Some(d) => d,
+        None => ".".to_string(),
+    };
+    Ok(glob(&format!("{}/**/*.txt", dir))?
+        .chain(glob(&format!("{}/**/*.md", dir))?)
         .filter(|x| x.is_ok())
         .map(|x| x.unwrap())
         .collect())
