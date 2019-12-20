@@ -1,19 +1,6 @@
-use std::collections::BTreeSet as Set;
-use std::fs::File;
-use std::io::Read;
-use std::path::PathBuf;
-
-#[macro_use]
-extern crate lazy_static;
-
-use glob::glob;
-use regex::Regex;
 use structopt::StructOpt;
 
-mod filter;
-mod list;
-
-type Result<T> = std::result::Result<T, Box<dyn ::std::error::Error>>;
+use tagsearch::{filter, list, utility::Result};
 
 #[derive(Debug, StructOpt)]
 #[structopt(
@@ -69,28 +56,4 @@ fn main() -> Result<()> {
     }
 
     Ok(())
-}
-
-fn get_files() -> Result<Vec<PathBuf>> {
-    Ok(glob("**/*.txt")?
-        .chain(glob("**/*.md")?)
-        .filter(|x| x.is_ok())
-        .map(|x| x.unwrap())
-        .collect())
-}
-
-fn get_tags_for_file(filename: &PathBuf) -> Vec<String> {
-    lazy_static! {
-        static ref RE: Regex = Regex::new(r"(?:^|\s)@(?P<keyword>[a-zA-Z_0-9\-]+)")
-            .expect("Couldn't create keyword regex");
-    }
-    let mut file = File::open(filename).expect("Couldn't open file");
-    let mut contents = String::new();
-    file.read_to_string(&mut contents)
-        .expect("Couldn't read contents of file");
-    let mut keywords = Set::new();
-    for cap in RE.captures_iter(&contents) {
-        keywords.insert(cap["keyword"].to_string());
-    }
-    keywords.iter().cloned().collect()
 }

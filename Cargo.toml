@@ -1,6 +1,6 @@
 [package]
 name = "tagsearch"
-version = "0.11.0"
+version = "0.12.0"
 authors = ["Chris Davison <c.jr.davison@gmail.com>"]
 edition = "2018"
 license = "MIT"
@@ -10,6 +10,14 @@ readme = "README.md"
 categories = ["command-line-interface", "text-processing"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "tagsearch"
+path = "src/lib.rs"
+
+[[bin]]
+name = "tagsearch"
+path = "bin/main.rs"
 
 [dependencies]
 regex = "1"

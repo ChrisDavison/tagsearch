@@ -2,7 +2,7 @@
 pub struct Filter<'a> {
     good_keywords: Vec<&'a str>,
     bad_keywords: Vec<&'a str>,
-    or_filter: bool
+    or_filter: bool,
 }
 
 impl Filter<'_> {
@@ -19,7 +19,7 @@ impl Filter<'_> {
         Filter {
             good_keywords: good,
             bad_keywords: bad,
-            or_filter
+            or_filter,
         }
     }
 
