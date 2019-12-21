@@ -1,0 +1,73 @@
+.TH TAGSEARCH 1
+.SH NAME
+tagsearch \- search for '@keyword' tags across plaintex files
+
+.SH SYNOPSIS
+.B tagsearch [OPTIONS] TAGS...
+
+.B tagsearch \-u|\-\-untagged
+
+.B tagsearch \-l|\-\-list
+
+.B tagsearch \-\-similar\-tags
+
+.SH DESCRIPTION
+tagsearch recursively searches text (.txt) and markdown (.md) files for any keywords/tags. Keywords are defined as anything matching the regex '\\b@[a-zA-Z0-9_-]+\\b', i.e. an '@' followed by alphanumeric, underscore, or hyphen. If a tag is prefixed by '!', it will be used as a 
+.I negative 
+filter\-\-to use negative filters, you will need to enclose the tag in single quotes or your shell is likely to expand '!' to something.
+
+All filtering is
+.I and\fR
+filtering, e.g. every tag is required. Future versions may allow
+.I or\fR
+filtering, where we will consider it a match if any tag matches.
+
+.I Negative\fR
+filters can be thought of as 'or' filters, as the filter will skip files that match any of the negative keywords.
+
+.SH USE-CASES
+.B quantified self\fR
+.RS
+By keeping plaintext files with lines matching something like 'title: ..., value: ..., @TAGS', I can use tagsearch to get an overview of all files matching a pattern, e.g. to see how my fitness is developing over time.
+
+.B cat $(tagsearch heartrate 2019)\fR
+will show me all the entries for resting heartrate that I've recorded during 2019. In this case, the files would have '@heartrate @2019' (at least) somewhere in the file, and the value would be something like '60', so I would simply be previewing all entries and could scan down the heartrates.
+.RE
+
+.B finance tracking\fR
+.RS
+With a slightly similar format to the
+.I quantified self
+example, except with 'value' changed to 'cost', I can instead get an overview of purchases over time.
+
+.B tagsearch bike fashion\fR
+will show all purchases (text file records) of clothes I've bought for cycling.
+.RE
+
+.B plaintext bookmarks
+.RS
+The important key:value pairs I use for this are
+.BR title,\ url,\ date,
+and typically have tags something like '@programming' and '@unread', which lets me easily find bookmarks I haven't read. Date is useful as well, as it gives me an indicator of when I may be able to go back to on the 'wayback machine' to get a relevant match.
+.RE
+
+.SH POSITIONAL ARGUMENTS
+.TP
+.B TAGS\fR
+.RS
+Tags used to filter files. This will filter to files that match ALL tags passed, and NONE of tags passed with prefix '!'
+.RE
+
+.SH GENERAL OPTIONS
+.TP
+.B \-u ", " \-\-untagged\fR
+Show all files that have no tags
+
+.TP
+.B \-l ", " \-\-list\fR
+List all tags for any files that match the filter
+
+.TP
+.B \-\-similar\-tags\fR
+Use some heuristics to check if there are almost-duplicate tags (currently does very-simple tests like plurality and case comparison)
+
