@@ -33,7 +33,9 @@ pub fn files_matching_tag_query(f: filter::Filter) -> Result<()> {
 pub fn untagged_files() -> Result<()> {
     for entry in get_files(None)? {
         if get_tags_for_file(&entry).is_empty() {
-            println!("{:?}", entry);
+            if let Some(fname) = entry.to_str() {
+                println!("{}", fname);
+            }
         }
     }
     Ok(())
