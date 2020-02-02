@@ -21,9 +21,8 @@ pub fn tags_matching_tag_query(f: filter::Filter, long_list: bool) -> Result<()>
 pub fn files_matching_tag_query(f: filter::Filter) -> Result<()> {
     let matching_files: Vec<String> = get_files(None)?
         .iter()
-        .map(|fname| (fname, get_tags_for_file(&fname)))
-        .filter(|(_, tags)| f.matches(tags))
-        .map(|(fname, _)| fname.to_str().unwrap().to_string())
+        .filter(|fname| f.matches(get_tags_for_file(&fname).as_ref()))
+        .map(|fname| fname.to_string())
         .collect();
     println!("{}", matching_files.join("\n"));
 
@@ -31,11 +30,9 @@ pub fn files_matching_tag_query(f: filter::Filter) -> Result<()> {
 }
 
 pub fn untagged_files() -> Result<()> {
-    for entry in get_files(None)? {
-        if get_tags_for_file(&entry).is_empty() {
-            if let Some(fname) = entry.to_str() {
-                println!("{}", fname);
-            }
+    for fname in get_files(None)? {
+        if get_tags_for_file(&fname).is_empty() {
+            println!("{}", fname);
         }
     }
     Ok(())

@@ -10,7 +10,7 @@ impl Filter<'_> {
         let mut good = Vec::new();
         let mut bad = Vec::new();
         for &kw in keywords {
-            if kw.starts_with("!") {
+            if kw.starts_with('!') {
                 bad.push(&kw[1..]);
             } else {
                 good.push(kw);

@@ -2,14 +2,13 @@ use lazy_static;
 use std::collections::BTreeSet as Set;
 use std::fs::File;
 use std::io::Read;
-use std::path::PathBuf;
 
 use glob::glob;
 use regex::Regex;
 
 pub type Result<T> = std::result::Result<T, Box<dyn ::std::error::Error>>;
 
-pub fn get_files(root: Option<String>) -> Result<Vec<PathBuf>> {
+pub fn get_files(root: Option<String>) -> Result<Vec<String>> {
     let dir = match root {
         Some(d) => d,
         None => ".".to_string(),
@@ -17,11 +16,11 @@ pub fn get_files(root: Option<String>) -> Result<Vec<PathBuf>> {
     Ok(glob(&format!("{}/**/*.txt", dir))?
         .chain(glob(&format!("{}/**/*.md", dir))?)
         .filter(|x| x.is_ok())
-        .map(|x| x.unwrap())
+        .map(|x| x.unwrap().to_str().unwrap().to_string())
         .collect())
 }
 
-pub fn get_tags_for_file(filename: &PathBuf) -> Vec<String> {
+pub fn get_tags_for_file(filename: &str) -> Vec<String> {
     lazy_static! {
         static ref RE: Regex = Regex::new(r"(?:^|\s)@(?P<keyword>[a-zA-Z_0-9\-]+)")
             .expect("Couldn't create keyword regex");
