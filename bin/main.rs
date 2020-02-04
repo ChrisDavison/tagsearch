@@ -49,7 +49,7 @@ fn main() -> Result<()> {
         list::untagged_files()?;
     } else if args.similar_tags {
         list::similar_tags()?;
-    } else if args.list || args.keywords.is_empty() {
+    } else if args.list || args.long || args.keywords.is_empty() {
         list::tags_matching_tag_query(f, args.long)?;
     } else {
         list::files_matching_tag_query(f)?;
