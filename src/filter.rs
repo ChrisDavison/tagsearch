@@ -60,7 +60,6 @@ impl Filter<'_> {
             .filter(|fname| self.matches(get_tags_for_file(&fname).as_ref()))
             .map(|fname| fname.to_string())
             .collect();
-        println!("{}", matching_files.join("\n"));
 
         Ok(matching_files)
     }
