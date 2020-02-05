@@ -1,6 +1,6 @@
 use structopt::StructOpt;
 
-use tagsearch::{filter, list, utility::Result};
+use tagsearch::{filter, utility::*};
 
 #[derive(Debug, StructOpt)]
 #[structopt(
@@ -45,15 +45,51 @@ fn main() -> Result<()> {
         .collect::<Vec<&str>>();
     let f = filter::Filter::new(kws.as_ref(), args.or_filter);
 
+    let files = get_files(None)?;
+
     if args.untagged {
-        list::untagged_files()?;
+        display_untagged(f, &files);
     } else if args.similar_tags {
-        list::similar_tags()?;
+        display_similar_tags(f, &files);
     } else if args.list || args.long || args.keywords.is_empty() {
-        list::tags_matching_tag_query(f, args.long)?;
+        display_tags(f, &files, args.long);
     } else {
-        list::files_matching_tag_query(f)?;
+        display_files_matching_query(f, &files);
     }
 
     Ok(())
+}
+
+fn display_untagged(f: filter::Filter, files: &[String]) {
+    if let Ok(untagged) = f.untagged_files(&files) {
+        for fname in untagged {
+            println!("{}", fname);
+        }
+    }
+}
+
+fn display_similar_tags(f: filter::Filter, files: &[String]) {
+    if let Ok(similar) = f.similar_tags(&files) {
+        if !similar.is_empty() {
+            println!("Similar tags:");
+            for (issue, key1, key2) in similar {
+                println!("{} - {} & {}", issue, key1, key2);
+            }
+        }
+    }
+}
+
+fn display_files_matching_query(f: filter::Filter, files: &[String]) {
+    if let Ok(matching) = f.files_matching_tag_query(&files) {
+        for fname in matching {
+            println!("{}", fname);
+        }
+    }
+}
+
+fn display_tags (f: filter::Filter, files: &[String], long_list: bool){
+    let joinchar = if long_list { "\n" } else { ", " };
+    if let Ok(tags) = f.tags_matching_tag_query(files.to_vec()) {
+        println!("{}", tags.join(joinchar));
+    }
 }
