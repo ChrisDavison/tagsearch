@@ -81,9 +81,7 @@ fn display_similar_tags(f: filter::Filter, files: &[String]) {
 
 fn display_files_matching_query(f: filter::Filter, files: &[String]) {
     if let Ok(matching) = f.files_matching_tag_query(&files) {
-        for fname in matching {
-            println!("{}", fname);
-        }
+        println!("{}", matching.join("\n"));
     }
 }
 
