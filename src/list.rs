@@ -44,16 +44,21 @@ pub fn similar_tags() -> Result<()> {
         let tags = get_tags_for_file(&entry);
         tagset.extend(tags);
     }
-    let tagkeys = tagset.iter().cloned().collect::<Vec<String>>();
     let mut similar = Vec::new();
-    for key in &tagkeys {
-        for key2 in &tagkeys {
+    for key in &tagset {
+        for key2 in &tagset {
             if key == key2 {
                 continue;
             } else if key.to_lowercase() == key2.to_lowercase() {
-                similar.push(("CASE", key, key2));
+                // Ensure we don't add B-A if we've flagged A-B
+                if !similar.contains(&("CASE", key2, key)) {
+                    similar.push(("CASE", key, key2));
+                }
             } else if key.trim_end_matches('s') == key2.trim_end_matches('s') {
-                similar.push(("PLURAL", key, key2));
+                // Ensure we don't add B-A if we've flagged A-B
+                if !similar.contains(&("PLURAL", key2, key)) {
+                    similar.push(("PLURAL", key, key2));
+                }
             }
         }
     }
