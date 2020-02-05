@@ -18,7 +18,7 @@ pub fn tags_matching_tag_query(f: filter::Filter, long_list: bool) -> Result<()>
     Ok(())
 }
 
-pub fn files_matching_tag_query(f: filter::Filter) -> Result<()> {
+pub fn files_matching_tag_query(f: filter::Filter) -> Result<Vec<String>> {
     let matching_files: Vec<String> = get_files(None)?
         .iter()
         .filter(|fname| f.matches(get_tags_for_file(&fname).as_ref()))
@@ -26,7 +26,7 @@ pub fn files_matching_tag_query(f: filter::Filter) -> Result<()> {
         .collect();
     println!("{}", matching_files.join("\n"));
 
-    Ok(())
+    Ok(matching_files)
 }
 
 pub fn untagged_files() -> Result<()> {
