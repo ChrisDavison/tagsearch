@@ -1,6 +1,6 @@
 use crate::utility::{get_tags_for_file, Result};
 
-use std::collections::BTreeSet as Set;
+use std::collections::{BTreeSet as Set,BTreeMap as Map};
 
 #[derive(Debug)]
 pub struct Filter<'a> {
@@ -100,5 +100,23 @@ impl Filter<'_> {
             }
         }
         Ok(similar)
+    }
+
+    pub fn count_of_tags(&self, files: &[String]) -> Result<Vec<(usize, String)>> {
+        let mut tagmap: Map<String, usize> = Map::new();
+        for entry in files {
+            for tag in  get_tags_for_file(&entry){
+                match tagmap.get_mut(&tag) {
+                    Some(val) => *val += 1,
+                    None => {tagmap.insert(tag, 1); ()},
+                }
+            }
+        }
+        let mut out = Vec::new();
+        for (key, val) in tagmap {
+            out.push((val, key));
+        }
+        out.sort_by(|a, b| a.0.cmp(&b.0).reverse());
+        Ok(out)
     }
 }

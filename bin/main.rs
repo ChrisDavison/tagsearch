@@ -20,9 +20,6 @@ struct Opt {
     #[structopt(long)]
     long: bool,
 
-    // /// Show number of files for each tag, and sort by number of files
-    // #[structopt(short, long)]
-    // numeric: bool,
     /// Filter using ANY, rather than ALL keywords
     #[structopt(short, long)]
     or_filter: bool,
@@ -30,6 +27,10 @@ struct Opt {
     /// Show untagged files
     #[structopt(short, long)]
     untagged: bool,
+
+    /// Show count of tags
+    #[structopt(short,long)]
+    count: bool,
 
     /// Show similar tags
     #[structopt(long)]
@@ -51,6 +52,8 @@ fn main() -> Result<()> {
         display_untagged(f, &files);
     } else if args.similar_tags {
         display_similar_tags(f, &files);
+    } else if args.count {
+        display_tag_count(f, &files);
     } else if args.list || args.long || args.keywords.is_empty() {
         display_tags(f, &files, args.long);
     } else {
@@ -89,5 +92,13 @@ fn display_tags (f: filter::Filter, files: &[String], long_list: bool){
     let joinchar = if long_list { "\n" } else { ", " };
     if let Ok(tags) = f.tags_matching_tag_query(files.to_vec()) {
         println!("{}", tags.join(joinchar));
+    }
+}
+
+fn display_tag_count(f: filter::Filter, files: &[String]) {
+    if let Ok(tagmap) = f.count_of_tags(&files) {
+        for (count, key) in tagmap {
+            println!("{:5} {}", count, key);
+        }
     }
 }
