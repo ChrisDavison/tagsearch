@@ -9,8 +9,12 @@ use tagsearch::{filter, utility::*};
     version = "0.9.1"
 )]
 struct Opt {
-    /// Keywords to filter by (prefix with ! for negative-match)
+    /// Keywords to filter
     keywords: Vec<String>,
+
+    /// Keywords to inverse filter (i.e. ignore matching files)
+    #[structopt(long)]
+    not: Vec<String>,
 
     /// List all tags for files matching keywords
     #[structopt(short, long)]
@@ -39,12 +43,11 @@ struct Opt {
 
 fn main() -> Result<()> {
     let args = Opt::from_args();
-    let kws = args
-        .keywords
-        .iter()
-        .map(|x| x.as_str())
-        .collect::<Vec<&str>>();
-    let f = filter::Filter::new(kws.as_ref(), args.or_filter);
+    // let mut kws = args.keywords.clone();
+    // kws.extend(args.not.iter()
+    //            .map(|x| String::from("!") + x));
+    // let kws = kws.iter().map(|x| x.as_str()).collect::<Vec<&str>>();
+    let f = filter::Filter::new(args.keywords.clone().as_slice(), args.not.clone().as_slice(), args.or_filter);
 
     let files = get_files(None)?;
 

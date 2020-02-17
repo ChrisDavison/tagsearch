@@ -3,26 +3,17 @@ use crate::utility::{get_tags_for_file, Result};
 use std::collections::{BTreeSet as Set,BTreeMap as Map};
 
 #[derive(Debug)]
-pub struct Filter<'a> {
-    good_keywords: Vec<&'a str>,
-    bad_keywords: Vec<&'a str>,
+pub struct Filter {
+    good_keywords: Vec<String>,
+    bad_keywords: Vec<String>,
     or_filter: bool,
 }
 
-impl Filter<'_> {
-    pub fn new<'a>(keywords: &'a [&str], or_filter: bool) -> Filter<'a> {
-        let mut good = Vec::new();
-        let mut bad = Vec::new();
-        for &kw in keywords {
-            if kw.starts_with('!') {
-                bad.push(&kw[1..]);
-            } else {
-                good.push(kw);
-            }
-        }
+impl Filter {
+    pub fn new(keywords: &[String], bad_keywords: &[String], or_filter: bool) -> Filter {
         Filter {
-            good_keywords: good,
-            bad_keywords: bad,
+            good_keywords: keywords.to_vec(),
+            bad_keywords: bad_keywords.to_vec(),
             or_filter,
         }
     }
@@ -30,9 +21,9 @@ impl Filter<'_> {
     pub fn matches(&self, tags: &[String]) -> bool {
         let mut num_matches: usize = 0;
         for tag in tags {
-            if self.bad_keywords.contains(&tag.as_str()) {
+            if self.bad_keywords.contains(tag) {
                 return false;
-            } else if self.good_keywords.contains(&tag.as_str()) {
+            } else if self.good_keywords.contains(tag) {
                 num_matches += 1;
             }
         }
