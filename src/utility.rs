@@ -13,11 +13,15 @@ pub fn get_files(root: Option<String>) -> Result<Vec<String>> {
         Some(d) => d,
         None => ".".to_string(),
     };
-    Ok(glob(&format!("{}/**/*.txt", dir))?
-        .chain(glob(&format!("{}/**/*.md", dir))?)
-        .filter(|x| x.is_ok())
-        .map(|x| x.unwrap().to_str().unwrap().to_string())
-        .collect())
+    let mut files = Vec::new();
+    let txts = glob(&format!("{}/**/*.txt", dir))?;
+    let mds = glob(&format!("{}/**/*.md", dir))?;
+    for filename in txts.chain(mds) {
+        if let Ok(fname) = filename {
+            files.push(fname.to_string_lossy().into());
+        }
+    }
+    Ok(files)
 }
 
 pub fn get_tags_for_file(filename: &str) -> Vec<String> {
