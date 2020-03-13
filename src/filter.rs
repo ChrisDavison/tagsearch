@@ -1,7 +1,16 @@
 use crate::utility::{get_tags_for_file, Result};
 
-use std::collections::{BTreeSet as Set,BTreeMap as Map};
+use std::collections::{BTreeMap as Map, BTreeSet as Set};
 
+/// The `Filter` struct is used for filtering files for tags
+///
+/// The filter is split into 'good words' and 'bad words', i.e. tags that a
+/// file MUST have and tags that a file MUST NOT have.
+///
+/// The filter, by default, is an AND filter, i.e. all good words must exist
+/// and no bad words must exist. The filter can be made into an OR filter,
+/// where a file will be returned if ANY good word matches the file and NO
+/// bad words match.
 #[derive(Debug)]
 pub struct Filter {
     good_keywords: Vec<String>,
@@ -10,6 +19,10 @@ pub struct Filter {
 }
 
 impl Filter {
+    /// Create a new `Filter`
+    ///
+    /// This simply takes the good and bad keywords and turns them into a
+    /// vector. It also sets whether the filter is AND or OR-based.
     pub fn new(keywords: &[String], bad_keywords: &[String], or_filter: bool) -> Filter {
         Filter {
             good_keywords: keywords.to_vec(),
@@ -18,6 +31,21 @@ impl Filter {
         }
     }
 
+    /// Check if a set of tags matches the filter
+    ///
+    /// This takes a bunch of tags that have been pulled from a file, and
+    /// checks if the good and bad keywords match.
+    ///
+    /// # Example
+    ///
+    /// Basic usage:
+    ///
+    /// ```
+    /// let f = Filter::new(vec!["work", "project1"], vec!["project2"]);
+    /// if f.matches(vec!["work", "project3", "project3"]) {
+    ///     println!("MATCHES");
+    /// }
+    /// ```
     pub fn matches(&self, tags: &[String]) -> bool {
         let mut num_matches: usize = 0;
         for tag in tags {
@@ -33,6 +61,11 @@ impl Filter {
             num_matches >= self.good_keywords.len()
         }
     }
+
+    /// Extract ALL tags from files that match a filter
+    ///
+    /// Given a set of filenames (as `String`s), check if each file matches
+    /// the filter. If a file matches, append all of it's tags to a vector.
     pub fn tags_matching_tag_query(&self, files: Vec<String>) -> Result<Vec<String>> {
         let mut tagset: Set<String> = Set::new();
         for entry in files {
@@ -45,6 +78,10 @@ impl Filter {
         Ok(tagset.iter().cloned().collect::<Vec<String>>())
     }
 
+    /// Extract all files that match a filter
+    ///
+    /// Given a set of filenames (as `String`s), check if each file matches
+    /// the filter. If a file matches, append it to the vector.
     pub fn files_matching_tag_query(&self, files: &[String]) -> Result<Vec<String>> {
         let matching_files: Vec<String> = files
             .iter()
@@ -55,6 +92,7 @@ impl Filter {
         Ok(matching_files)
     }
 
+    /// Get all files without tags
     pub fn untagged_files(&self, files: &[String]) -> Result<Vec<String>> {
         Ok(files
             .iter()
@@ -63,6 +101,14 @@ impl Filter {
             .collect())
     }
 
+    /// List possibly similar tags, based on some simple heuristics.
+    ///
+    /// This only does a simple test for case (i.e. upper vs lowercase) and
+    /// plurality. The plurality check only does a simple test if one tag ends
+    /// with 's' and the other doesn't.
+    ///
+    /// If the pair (A,B) is listed as having a problem, the pair (B,A) WILL
+    /// NOT be added to the result.
     pub fn similar_tags(&self, files: &[String]) -> Result<Vec<(String, String, String)>> {
         let mut tagset: Set<String> = Set::new();
         for entry in files {
@@ -93,13 +139,20 @@ impl Filter {
         Ok(similar)
     }
 
+    /// Count the number of occurences of each tag
+    ///
+    /// This will count how many files each tag appears in. The returned
+    /// vector is sorted high to low.
     pub fn count_of_tags(&self, files: &[String]) -> Result<Vec<(usize, String)>> {
         let mut tagmap: Map<String, usize> = Map::new();
         for entry in files {
-            for tag in  get_tags_for_file(&entry){
+            for tag in get_tags_for_file(&entry) {
                 match tagmap.get_mut(&tag) {
                     Some(val) => *val += 1,
-                    None => {tagmap.insert(tag, 1); ()},
+                    None => {
+                        tagmap.insert(tag, 1);
+                        ()
+                    }
                 }
             }
         }

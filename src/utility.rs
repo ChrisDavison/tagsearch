@@ -8,6 +8,11 @@ use regex::Regex;
 
 pub type Result<T> = std::result::Result<T, Box<dyn ::std::error::Error>>;
 
+/// Get all files from either a passed path or under the current directory.
+///
+/// This will do a recursive glob for `.txt` and `.md` files. If the `root`
+/// argument is `None`, then the current directory will be used; otherwise,
+/// the given path will be used.
 pub fn get_files(root: Option<String>) -> Result<Vec<String>> {
     let dir = match root {
         Some(d) => d,
@@ -24,6 +29,13 @@ pub fn get_files(root: Option<String>) -> Result<Vec<String>> {
     Ok(files)
 }
 
+/// Get all tags for a single file
+///
+/// This will take all 'keywords' that match from a file, where a keyword
+/// is defined as `@[a-zA-Z0-9_\-]`, i.e. any alphanumeric character, `_`,
+/// or `-`. The keyword must be separate from it's surroundings (e.g. `\b`
+/// in regex terminology)...spaces, start or end of line, punctuation all
+/// count as being a 'boundary'. The leading `@` will be stripped.
 pub fn get_tags_for_file(filename: &str) -> Vec<String> {
     lazy_static! {
         static ref RE: Regex = Regex::new(r"(?:^|\s)@(?P<keyword>[a-zA-Z_0-9\-]+)")

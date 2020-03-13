@@ -33,7 +33,7 @@ struct Opt {
     untagged: bool,
 
     /// Show count of tags
-    #[structopt(short,long)]
+    #[structopt(short, long)]
     count: bool,
 
     /// Show similar tags
@@ -47,7 +47,11 @@ fn main() -> Result<()> {
     // kws.extend(args.not.iter()
     //            .map(|x| String::from("!") + x));
     // let kws = kws.iter().map(|x| x.as_str()).collect::<Vec<&str>>();
-    let f = filter::Filter::new(args.keywords.clone().as_slice(), args.not.clone().as_slice(), args.or_filter);
+    let f = filter::Filter::new(
+        args.keywords.clone().as_slice(),
+        args.not.clone().as_slice(),
+        args.or_filter,
+    );
 
     let files = get_files(None)?;
 
@@ -91,7 +95,7 @@ fn display_files_matching_query(f: filter::Filter, files: &[String]) {
     }
 }
 
-fn display_tags (f: filter::Filter, files: &[String], long_list: bool){
+fn display_tags(f: filter::Filter, files: &[String], long_list: bool) {
     let joinchar = if long_list { "\n" } else { ", " };
     if let Ok(tags) = f.tags_matching_tag_query(files.to_vec()) {
         println!("{}", tags.join(joinchar));
