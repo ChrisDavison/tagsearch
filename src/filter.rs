@@ -23,10 +23,13 @@ impl Filter {
     ///
     /// This simply takes the good and bad keywords and turns them into a
     /// vector. It also sets whether the filter is AND or OR-based.
-    pub fn new(keywords: &[String], bad_keywords: &[String], or_filter: bool) -> Filter {
+    pub fn new<S: AsRef<str>>(keywords: &[S], bad_keywords: &[S], or_filter: bool) -> Filter {
         Filter {
-            good_keywords: keywords.to_vec(),
-            bad_keywords: bad_keywords.to_vec(),
+            good_keywords: keywords.iter().map(|x| x.as_ref().to_string()).collect(),
+            bad_keywords: bad_keywords
+                .iter()
+                .map(|x| x.as_ref().to_string())
+                .collect(),
             or_filter,
         }
     }
@@ -41,17 +44,17 @@ impl Filter {
     /// Basic usage:
     ///
     /// ```
-    /// let f = Filter::new(vec!["work", "project1"], vec!["project2"]);
-    /// if f.matches(vec!["work", "project3", "project3"]) {
+    /// let f = tagsearch::filter::Filter::new(&["work", "project1"], &["project2"], false);
+    /// if f.matches(&["work", "project3", "project3"]) {
     ///     println!("MATCHES");
     /// }
     /// ```
-    pub fn matches(&self, tags: &[String]) -> bool {
+    pub fn matches<S: AsRef<str>>(&self, tags: &[S]) -> bool {
         let mut num_matches: usize = 0;
         for tag in tags {
-            if self.bad_keywords.contains(tag) {
+            if self.bad_keywords.contains(&tag.as_ref().to_string()) {
                 return false;
-            } else if self.good_keywords.contains(tag) {
+            } else if self.good_keywords.contains(&tag.as_ref().to_string()) {
                 num_matches += 1;
             }
         }
