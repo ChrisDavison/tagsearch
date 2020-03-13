@@ -152,7 +152,7 @@ dependencies = [
 
 [[package]]
 name = "tagsearch"
-version = "0.23.0"
+version = "0.24.0"
 dependencies = [
  "glob 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
