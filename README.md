@@ -1,5 +1,7 @@
 # Tagsearch - Search for, and/or summarise, tags in plaintext files.
 
+![Rust](https://github.com/chrisdavison/tagsearch/workflows/Rust/badge.svg)
+
 ## Introduction
 
 This finds all instances of `@ALPHANUMERIC` (e.g. roughly matches the regex
