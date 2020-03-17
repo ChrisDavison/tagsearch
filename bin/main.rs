@@ -43,10 +43,6 @@ struct Opt {
 
 fn main() -> Result<()> {
     let args = Opt::from_args();
-    // let mut kws = args.keywords.clone();
-    // kws.extend(args.not.iter()
-    //            .map(|x| String::from("!") + x));
-    // let kws = kws.iter().map(|x| x.as_str()).collect::<Vec<&str>>();
     let f = filter::Filter::new(
         args.keywords.clone().as_slice(),
         args.not.clone().as_slice(),
@@ -71,7 +67,7 @@ fn main() -> Result<()> {
 }
 
 fn display_untagged(f: filter::Filter, files: &[String]) {
-    if let Ok(untagged) = f.untagged_files(&files) {
+    if let Ok(untagged) = f.untagged_files(files) {
         for fname in untagged {
             println!("{}", fname);
         }
