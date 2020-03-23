@@ -3,17 +3,15 @@ use std::collections::BTreeSet as Set;
 use std::fs::File;
 use std::io::Read;
 
-use glob::glob;
+use glob::{glob, PatternError};
 use regex::Regex;
-
-pub type Result<T> = std::result::Result<T, Box<dyn ::std::error::Error>>;
 
 /// Get all files from either a passed path or under the current directory.
 ///
 /// This will do a recursive glob for `.txt` and `.md` files. If the `root`
 /// argument is `None`, then the current directory will be used; otherwise,
 /// the given path will be used.
-pub fn get_files(root: Option<String>) -> Result<Vec<String>> {
+pub fn get_files(root: Option<String>) -> Result<Vec<String>, PatternError> {
     let dir = match root {
         Some(d) => d,
         None => ".".to_string(),

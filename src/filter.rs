@@ -1,4 +1,4 @@
-use crate::utility::{get_tags_for_file, Result};
+use crate::utility::get_tags_for_file;
 
 use std::collections::{BTreeMap as Map, BTreeSet as Set};
 
@@ -69,7 +69,7 @@ impl Filter {
     ///
     /// Given a set of filenames (as `String`s), check if each file matches
     /// the filter. If a file matches, append all of it's tags to a vector.
-    pub fn tags_matching_tag_query(&self, files: Vec<String>) -> Result<Vec<String>> {
+    pub fn tags_matching_tag_query(&self, files: Vec<String>) -> Vec<String> {
         let mut tagset: Set<String> = Set::new();
         for entry in files {
             let tags = get_tags_for_file(&entry);
@@ -78,30 +78,30 @@ impl Filter {
             }
         }
 
-        Ok(tagset.iter().cloned().collect::<Vec<String>>())
+        tagset.iter().cloned().collect::<Vec<String>>()
     }
 
     /// Extract all files that match a filter
     ///
     /// Given a set of filenames (as `String`s), check if each file matches
     /// the filter. If a file matches, append it to the vector.
-    pub fn files_matching_tag_query(&self, files: &[String]) -> Result<Vec<String>> {
+    pub fn files_matching_tag_query(&self, files: &[String]) -> Vec<String> {
         let matching_files: Vec<String> = files
             .iter()
             .filter(|fname| self.matches(get_tags_for_file(&fname).as_ref()))
             .map(|fname| fname.to_string())
             .collect();
 
-        Ok(matching_files)
+        matching_files
     }
 
     /// Get all files without tags
-    pub fn untagged_files(&self, files: &[String]) -> Result<Vec<String>> {
-        Ok(files
+    pub fn untagged_files(&self, files: &[String]) -> Vec<String> {
+        files
             .iter()
             .filter(|x| get_tags_for_file(&x).is_empty())
             .map(|x| x.to_string())
-            .collect())
+            .collect()
     }
 
     /// List possibly similar tags, based on some simple heuristics.
@@ -112,7 +112,7 @@ impl Filter {
     ///
     /// If the pair (A,B) is listed as having a problem, the pair (B,A) WILL
     /// NOT be added to the result.
-    pub fn similar_tags(&self, files: &[String]) -> Result<Vec<(String, String, String)>> {
+    pub fn similar_tags(&self, files: &[String]) -> Vec<(String, String, String)> {
         let mut tagset: Set<String> = Set::new();
         for entry in files {
             let tags = get_tags_for_file(&entry);
@@ -139,14 +139,14 @@ impl Filter {
                 }
             }
         }
-        Ok(similar)
+        similar
     }
 
     /// Count the number of occurences of each tag
     ///
     /// This will count how many files each tag appears in. The returned
     /// vector is sorted high to low.
-    pub fn count_of_tags(&self, files: &[String]) -> Result<Vec<(usize, String)>> {
+    pub fn count_of_tags(&self, files: &[String]) -> Vec<(usize, String)> {
         let mut tagmap: Map<String, usize> = Map::new();
         for entry in files {
             for tag in get_tags_for_file(&entry) {
@@ -164,6 +164,6 @@ impl Filter {
             out.push((val, key));
         }
         out.sort_by(|a, b| a.0.cmp(&b.0).reverse());
-        Ok(out)
+        out
     }
 }

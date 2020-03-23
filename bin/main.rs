@@ -41,7 +41,7 @@ struct Opt {
     similar_tags: bool,
 }
 
-fn main() -> Result<()> {
+fn main() {
     let args = Opt::from_args();
     let f = filter::Filter::new(
         args.keywords.clone().as_slice(),
@@ -49,7 +49,13 @@ fn main() -> Result<()> {
         args.or_filter,
     );
 
-    let files = get_files(None)?;
+    let files = match get_files(None) {
+        Ok(files) => files,
+        Err(e) => {
+            println!("Error getting files: {}", e);
+            std::process::exit(1)
+        }
+    };
 
     if args.untagged {
         display_untagged(f, &files);
@@ -62,46 +68,38 @@ fn main() -> Result<()> {
     } else {
         display_files_matching_query(f, &files);
     }
-
-    Ok(())
 }
 
 fn display_untagged(f: filter::Filter, files: &[String]) {
-    if let Ok(untagged) = f.untagged_files(files) {
-        for fname in untagged {
-            println!("{}", fname);
-        }
+    for fname in f.untagged_files(files) {
+        println!("{}", fname);
     }
 }
 
 fn display_similar_tags(f: filter::Filter, files: &[String]) {
-    if let Ok(similar) = f.similar_tags(&files) {
-        if !similar.is_empty() {
-            println!("Similar tags:");
-            for (issue, key1, key2) in similar {
-                println!("{} - {} & {}", issue, key1, key2);
-            }
+    let similar = f.similar_tags(&files);
+    if !similar.is_empty() {
+        println!("Similar tags:");
+        for (issue, key1, key2) in similar {
+            println!("{} - {} & {}", issue, key1, key2);
         }
     }
 }
 
 fn display_files_matching_query(f: filter::Filter, files: &[String]) {
-    if let Ok(matching) = f.files_matching_tag_query(&files) {
-        println!("{}", matching.join("\n"));
-    }
+    println!("{}", f.files_matching_tag_query(&files).join("\n"));
 }
 
 fn display_tags(f: filter::Filter, files: &[String], long_list: bool) {
     let joinchar = if long_list { "\n" } else { ", " };
-    if let Ok(tags) = f.tags_matching_tag_query(files.to_vec()) {
-        println!("{}", tags.join(joinchar));
-    }
+    println!(
+        "{}",
+        f.tags_matching_tag_query(files.to_vec()).join(joinchar)
+    );
 }
 
 fn display_tag_count(f: filter::Filter, files: &[String]) {
-    if let Ok(tagmap) = f.count_of_tags(&files) {
-        for (count, key) in tagmap {
-            println!("{:5} {}", count, key);
-        }
+    for (count, key) in f.count_of_tags(&files) {
+        println!("{:5} {}", count, key);
     }
 }
