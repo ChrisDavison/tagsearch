@@ -18,6 +18,21 @@ pub struct Filter {
     or_filter: bool,
 }
 
+#[derive(Eq, PartialEq)]
+pub enum Issue {
+    Plural(String, String),
+    Case(String, String),
+}
+
+impl std::fmt::Display for Issue {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            Issue::Plural(a, b) => write!(f, "Plural - {} & {}", a, b),
+            Issue::Case(a, b) => write!(f, "Case - {} & {}", a, b),
+        }
+    }
+}
+
 impl Filter {
     /// Create a new `Filter`
     ///
@@ -112,7 +127,7 @@ impl Filter {
     ///
     /// If the pair (A,B) is listed as having a problem, the pair (B,A) WILL
     /// NOT be added to the result.
-    pub fn similar_tags(&self, files: &[String]) -> Vec<(String, String, String)> {
+    pub fn similar_tags(&self, files: &[String]) -> Vec<Issue> {
         let mut tagset: Set<String> = Set::new();
         for entry in files {
             let tags = get_tags_for_file(&entry);
@@ -121,21 +136,20 @@ impl Filter {
         let mut similar = Vec::new();
         for key in &tagset {
             for key2 in &tagset {
-                let mut issue = String::new();
                 if key == key2 {
                     continue;
-                } else if key.to_lowercase() == key2.to_lowercase() {
+                }
+                let issue = if key.to_lowercase() == key2.to_lowercase() {
                     // Ensure we don't add B-A if we've flagged A-B
-                    issue = String::from("CASE");
+                    Issue::Case(key.to_string(), key2.to_string())
                 } else if key.trim_end_matches('s') == key2.trim_end_matches('s') {
                     // Ensure we don't add B-A if we've flagged A-B
-                    issue = String::from("PLURAL")
-                }
-                if !issue.is_empty() {
-                    let elem = (issue.clone(), key.to_string(), key2.to_string());
-                    if !similar.contains(&(issue, key2.to_string(), key.to_string())) {
-                        similar.push(elem);
-                    }
+                    Issue::Plural(key.to_string(), key2.to_string())
+                } else {
+                    continue;
+                };
+                if !similar.contains(&issue) {
+                    similar.push(issue);
                 }
             }
         }

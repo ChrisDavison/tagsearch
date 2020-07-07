@@ -80,8 +80,8 @@ fn display_similar_tags(f: filter::Filter, files: &[String]) {
     let similar = f.similar_tags(&files);
     if !similar.is_empty() {
         println!("Similar tags:");
-        for (issue, key1, key2) in similar {
-            println!("{} - {} & {}", issue, key1, key2);
+        for issue in similar {
+            println!("{}", issue);
         }
     }
 }
