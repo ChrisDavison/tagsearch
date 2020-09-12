@@ -5,7 +5,8 @@
 ## Introduction
 
 This finds all instances of `@ALPHANUMERIC` (e.g. roughly matches the regex
-`@[a-zA-Z0-9]`) across `.txt` and `.md` recursively under the current directory.
+`@[a-zA-Z0-9]`) across `.txt`, `.md`, and `.org` recursively under the current 
+directory.
 
 The *purpose* of this script is to basically let me manage information in
 plaintext much more easily. I've added a separate file giving [a rough overview
