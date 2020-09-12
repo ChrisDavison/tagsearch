@@ -1,3 +1,5 @@
+use std::io::Write;
+
 use structopt::StructOpt;
 
 use tagsearch::{filter, utility::*};
@@ -57,49 +59,68 @@ fn main() {
         }
     };
 
-    if args.untagged {
-        display_untagged(f, &files);
+    if let Err(e) = if args.untagged {
+        display_untagged(f, &files)
     } else if args.similar_tags {
-        display_similar_tags(f, &files);
+        display_similar_tags(f, &files)
     } else if args.count {
-        display_tag_count(f, &files);
+        display_tag_count(f, &files)
     } else if args.list || args.long || args.keywords.is_empty() {
-        display_tags(f, &files, args.long);
+        display_tags(f, &files, args.long)
     } else {
-        display_files_matching_query(f, &files);
-    }
-}
-
-fn display_untagged(f: filter::Filter, files: &[String]) {
-    for fname in f.untagged_files(files) {
-        println!("{}", fname);
-    }
-}
-
-fn display_similar_tags(f: filter::Filter, files: &[String]) {
-    let similar = f.similar_tags(&files);
-    if !similar.is_empty() {
-        println!("Similar tags:");
-        for issue in similar {
-            println!("{}", issue);
+        display_files_matching_query(f, &files)
+    } {
+        if e.kind() != std::io::ErrorKind::BrokenPipe {
+            eprintln!("{}", e);
+            std::process::exit(1);
         }
     }
 }
 
-fn display_files_matching_query(f: filter::Filter, files: &[String]) {
-    println!("{}", f.files_matching_tag_query(&files).join("\n"));
+fn display_untagged(f: filter::Filter, files: &[String]) -> Result<(), std::io::Error> {
+    for fname in f.untagged_files(files) {
+        writeln!(&mut std::io::stdout(), "{}", fname)?;
+    }
+    Ok(())
 }
 
-fn display_tags(f: filter::Filter, files: &[String], long_list: bool) {
+fn display_similar_tags(f: filter::Filter, files: &[String]) -> Result<(), std::io::Error> {
+    let similar = f.similar_tags(&files);
+    if !similar.is_empty() {
+        writeln!(&mut std::io::stdout(), "Similar tags:")?;
+        for issue in similar {
+            writeln!(&mut std::io::stdout(), "{}", issue)?;
+        }
+    }
+    Ok(())
+}
+
+fn display_files_matching_query(f: filter::Filter, files: &[String]) -> Result<(), std::io::Error> {
+    writeln!(
+        &mut std::io::stdout(),
+        "{}",
+        f.files_matching_tag_query(&files).join("\n")
+    )?;
+    Ok(())
+}
+
+fn display_tags(
+    f: filter::Filter,
+    files: &[String],
+    long_list: bool,
+) -> Result<(), std::io::Error> {
     let joinchar = if long_list { "\n" } else { ", " };
-    println!(
+    writeln!(
+        &mut std::io::stdout(),
         "{}",
         f.tags_matching_tag_query(files.to_vec()).join(joinchar)
-    );
+    )?;
+    Ok(())
 }
 
-fn display_tag_count(f: filter::Filter, files: &[String]) {
+fn display_tag_count(f: filter::Filter, files: &[String]) -> Result<(), std::io::Error> {
     for (count, key) in f.count_of_tags(&files) {
-        println!("{:5} {}", count, key);
+        writeln!(&mut std::io::stdout(), "{:5} {}", count, key)?;
     }
+    Ok(())
 }
