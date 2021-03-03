@@ -41,6 +41,10 @@ struct Opt {
     /// Show similar tags
     #[structopt(long)]
     similar_tags: bool,
+
+    /// Output format suitable for vim quickfix
+    #[structopt(short, long)]
+    vim: bool,
 }
 
 fn main() {
@@ -60,7 +64,7 @@ fn main() {
     };
 
     if let Err(e) = if args.untagged {
-        display_untagged(f, &files)
+        display_untagged(f, &files, args.vim)
     } else if args.similar_tags {
         display_similar_tags(f, &files)
     } else if args.count {
@@ -68,7 +72,7 @@ fn main() {
     } else if args.list || args.long || args.keywords.is_empty() {
         display_tags(f, &files, args.long)
     } else {
-        display_files_matching_query(f, &files)
+        display_files_matching_query(f, &files, args.vim)
     } {
         if e.kind() != std::io::ErrorKind::BrokenPipe {
             eprintln!("{}", e);
@@ -77,9 +81,17 @@ fn main() {
     }
 }
 
-fn display_untagged(f: filter::Filter, files: &[String]) -> Result<(), std::io::Error> {
+fn display_untagged(
+    f: filter::Filter,
+    files: &[String],
+    vim_format: bool,
+) -> Result<(), std::io::Error> {
     for fname in f.untagged_files(files) {
-        writeln!(&mut std::io::stdout(), "{}", fname)?;
+        if vim_format {
+            writeln!(&mut std::io::stdout(), "{}:1:Ignore this message", fname)?;
+        } else {
+            writeln!(&mut std::io::stdout(), "{}", fname)?;
+        }
     }
     Ok(())
 }
@@ -95,12 +107,28 @@ fn display_similar_tags(f: filter::Filter, files: &[String]) -> Result<(), std::
     Ok(())
 }
 
-fn display_files_matching_query(f: filter::Filter, files: &[String]) -> Result<(), std::io::Error> {
-    writeln!(
-        &mut std::io::stdout(),
-        "{}",
-        f.files_matching_tag_query(&files).join("\n")
-    )?;
+fn display_files_matching_query(
+    f: filter::Filter,
+    files: &[String],
+    vim_format: bool,
+) -> Result<(), std::io::Error> {
+    if vim_format {
+        writeln!(
+            &mut std::io::stdout(),
+            "{}",
+            f.files_matching_tag_query(&files)
+                .iter()
+                .map(|fname| format!("{}:1:", fname))
+                .collect::<Vec<String>>()
+                .join("\n")
+        )?;
+    } else {
+        writeln!(
+            &mut std::io::stdout(),
+            "{}",
+            f.files_matching_tag_query(&files).join("\n")
+        )?;
+    }
     Ok(())
 }
 
