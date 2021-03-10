@@ -27,6 +27,9 @@ check:
 clean:
 	cargo clean
 
+install:
+	cargo install --path . --force
+
 release: $(BIN_NAME)
 	$$(rg version Cargo.toml | head -n1 | sed -e 's/.*"\([0-9]\+.[0-9]\+.[0-9]\+\)".*/\1/g' > VERSION)
 	gh release create "v$$(cat VERSION)" --title "Release $$(cat VERSION)" target/$(TARGET_WIN)/release/$(BIN_NAME).exe target/$(TARGET_LINUX)/release/$(BIN_NAME)

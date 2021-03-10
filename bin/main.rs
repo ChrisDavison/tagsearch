@@ -150,5 +150,5 @@ fn display_tag_count(f: filter::Filter, files: &[String]) -> Result<(), std::io:
     for (count, key) in f.count_of_tags(&files) {
         writeln!(&mut std::io::stdout(), "{:5} {}", count, key)?;
     }
-    Ok(())
+ files   Ok(())
 }
