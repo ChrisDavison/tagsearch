@@ -43,17 +43,19 @@ have access to a terminal and my own helper scripts.
 
 ## Installation
 
-Download the repo
+Can be either installed from source, or installed with `cargo`:
 
-    git clone git@github.com:Chrisdavison/tagsearch
+***From source:***
 
-Change to the repo directory
+```
+git clone git@github.com:Chrisdavison/tagsearch
+cd tagsearch
+cargo install --path . --force
+```
 
-    cd tagsearch
+***From cargo***
 
-Build and install
-
-    cargo install --path . --force
+`cargo install tagsearch`
 
 ### Dependencies
 
@@ -66,35 +68,49 @@ Build and install
 
 Current usage string:
 
-    tagsearch 0.9.0
-    search for, and/or summarise, tags in plaintext files
+```
+tagsearch 0.27.0
+search for, and/or summarise, tags in plaintext files
 
-    USAGE:
-        tagsearch [FLAGS] [keywords]...
+USAGE:
+    tagsearch [FLAGS] [OPTIONS] [--] [keywords]...
 
-    FLAGS:
-        -h, --help         Prints help information
-        -l, --list         List all tags for files matching keywords
-            --long         Long list (e.g. tall) all tags for files matching keywords
-        -o, --or-filter    Filter using ANY, rather than ALL keywords
-        -u, --untagged     Show untagged files
-        -V, --version      Prints version information
+FLAGS:
+    -c, --count           Show count of tags
+    -h, --help            Prints help information
+    -l, --list            List all tags for files matching keywords
+        --long            Long list (e.g. tall) all tags for files matching keywords
+    -o, --or-filter       Filter using ANY, rather than ALL keywords
+        --similar-tags    Show similar tags
+    -u, --untagged        Show untagged files
+    -V, --version         Prints version information
+    -v, --vim             Output format suitable for vim quickfix
 
-    ARGS:
-        <keywords>...    Keywords to filter by (prefix with ! for negative-match)
+OPTIONS:
+        --not <not>...    Keywords to inverse filter (i.e. ignore matching files)
 
-Unimplemented (as of yet), after change to rust:
-
-    -n, --numeric    When listing, sort by number of tags, and show number
-    -s, --summarise  List tags and matching files
+ARGS:
+    <keywords>...    Keywords to filter
+```
 
 Examples
 
-    tagsearch                 # defaults to -l|--long
-    tagsearch --long          # to show a tall list of tags
-    tagsearch golang          # Show files tagged 'golang'
-    tagsearch -l golang       # List all tags associated with files tagged 'golang'
-    tagsearch rust '!video'   # Show files tagged 'rust', but NOT tagged 'video'
-    tagsearch --OR spanish espanol   # Show files that match spanish OR espanol
+```
+# display all tags
+tagsearch                
 
-Note that you must wrap *not*-filters in quotes, as shells often do something special with `!`
+# display all tags in a column (like ls -l)
+tagsearch --long          
+
+# Show files tagged 'golang'
+tagsearch golang          
+
+# List all tags that occur along with golang
+tagsearch -l golang       
+
+# Show files tagged 'rust', but NOT tagged 'video'
+tagsearch rust --not video   
+
+# Show files that match spanish OR espanol
+tagsearch -o spanish espanol   
+```

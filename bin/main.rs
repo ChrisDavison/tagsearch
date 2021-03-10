@@ -7,8 +7,7 @@ use tagsearch::{filter, utility::*};
 #[derive(Debug, StructOpt)]
 #[structopt(
     name = "tagsearch",
-    about = "search for, and/or summarise, tags in plaintext files",
-    version = "0.9.1"
+    about = "search for, and/or summarise, tags in plaintext files"
 )]
 struct Opt {
     /// Keywords to filter
@@ -150,5 +149,5 @@ fn display_tag_count(f: filter::Filter, files: &[String]) -> Result<(), std::io:
     for (count, key) in f.count_of_tags(&files) {
         writeln!(&mut std::io::stdout(), "{:5} {}", count, key)?;
     }
- files   Ok(())
+    Ok(())
 }
