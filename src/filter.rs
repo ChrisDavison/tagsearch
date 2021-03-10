@@ -168,7 +168,6 @@ impl Filter {
                     Some(val) => *val += 1,
                     None => {
                         tagmap.insert(tag, 1);
-                        ()
                     }
                 }
             }

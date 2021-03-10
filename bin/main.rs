@@ -49,8 +49,8 @@ struct Opt {
 fn main() {
     let args = Opt::from_args();
     let f = filter::Filter::new(
-        args.keywords.clone().as_slice(),
-        args.not.clone().as_slice(),
+        args.keywords.as_slice(),
+        args.not.as_slice(),
         args.or_filter,
     );
 

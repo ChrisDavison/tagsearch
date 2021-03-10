@@ -1,4 +1,3 @@
-use lazy_static;
 use std::collections::BTreeSet as Set;
 use std::fs::File;
 use std::io::Read;
@@ -20,10 +19,8 @@ pub fn get_files(root: Option<String>) -> Result<Vec<String>, PatternError> {
     let txts = glob(&format!("{}/**/*.txt", dir))?;
     let mds = glob(&format!("{}/**/*.md", dir))?;
     let orgs = glob(&format!("{}/**/*.org", dir))?;
-    for filename in txts.chain(mds).chain(orgs) {
-        if let Ok(fname) = filename {
-            files.push(fname.to_string_lossy().into());
-        }
+    for filename in txts.chain(mds).chain(orgs).flatten() {
+        files.push(filename.to_string_lossy().into());
     }
     Ok(files)
 }
