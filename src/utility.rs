@@ -3,6 +3,7 @@ use std::fs::File;
 use std::io::Read;
 
 use glob::{glob, PatternError};
+use rayon::prelude::*;
 use regex::Regex;
 
 /// Get all files from either a passed path or under the current directory.
@@ -37,13 +38,14 @@ pub fn get_tags_for_file(filename: &str) -> Vec<String> {
         static ref RE: Regex = Regex::new(r"(?:^|\s)@(?P<keyword>[a-zA-Z_0-9\-]+)")
             .expect("Couldn't create keyword regex");
     }
-    let mut file = File::open(filename).expect(&format!("Couldn't open file: `{:?}`", filename));
+    let mut file =
+        File::open(filename).unwrap_or_else(|_| panic!("Couldn't open file: `{:?}`", filename));
     let mut contents = String::new();
     file.read_to_string(&mut contents)
-        .expect(&format!("Couldn't read contents of file: `{:?}`", filename));
+        .unwrap_or_else(|_| panic!("Couldn't read contents of file: `{:?}`", filename));
     let mut keywords = Set::new();
     for cap in RE.captures_iter(&contents) {
         keywords.insert(cap["keyword"].to_string());
     }
-    keywords.iter().cloned().collect()
+    keywords.par_iter().cloned().collect()
 }

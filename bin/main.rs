@@ -2,6 +2,7 @@ use std::io::Write;
 
 use structopt::StructOpt;
 
+use rayon::prelude::*;
 use tagsearch::{filter, utility::*};
 
 #[derive(Debug, StructOpt)]
@@ -116,7 +117,7 @@ fn display_files_matching_query(
             &mut std::io::stdout(),
             "{}",
             f.files_matching_tag_query(&files)
-                .iter()
+                .par_iter()
                 .map(|fname| format!("{}:1:", fname))
                 .collect::<Vec<String>>()
                 .join("\n")

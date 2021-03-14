@@ -2,6 +2,8 @@ use crate::utility::get_tags_for_file;
 
 use std::collections::{BTreeMap as Map, BTreeSet as Set};
 
+use rayon::prelude::*;
+
 /// The `Filter` struct is used for filtering files for tags
 ///
 /// The filter is split into 'good words' and 'bad words', i.e. tags that a
@@ -93,7 +95,7 @@ impl Filter {
             }
         }
 
-        tagset.iter().cloned().collect::<Vec<String>>()
+        tagset.par_iter().cloned().collect::<Vec<String>>()
     }
 
     /// Extract all files that match a filter
@@ -102,7 +104,7 @@ impl Filter {
     /// the filter. If a file matches, append it to the vector.
     pub fn files_matching_tag_query(&self, files: &[String]) -> Vec<String> {
         let matching_files: Vec<String> = files
-            .iter()
+            .par_iter()
             .filter(|fname| self.matches(get_tags_for_file(&fname).as_ref()))
             .map(|fname| fname.to_string())
             .collect();
@@ -113,7 +115,7 @@ impl Filter {
     /// Get all files without tags
     pub fn untagged_files(&self, files: &[String]) -> Vec<String> {
         files
-            .iter()
+            .par_iter()
             .filter(|x| get_tags_for_file(&x).is_empty())
             .map(|x| x.to_string())
             .collect()
