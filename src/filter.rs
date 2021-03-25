@@ -68,8 +68,11 @@ impl Filter {
     /// Basic usage:
     ///
     /// ```
-    /// let f = tagsearch::filter::Filter::new(&["work", "project1"], &["project2"], false);
-    /// if f.matches(&["work", "project3", "project3"]) {
+    /// let good = &[String::from("work"), String::from("project1")];
+    /// let bad = &[String::from("project2")];
+    /// let f = tagsearch::filter::Filter::new(good, bad, false, false);
+    /// let file_tags = &[String::from("work"), String::from("project3"), String::from("project3")];
+    /// if f.matches(file_tags) {
     ///     println!("MATCHES");
     /// }
     /// ```
