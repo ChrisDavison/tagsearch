@@ -18,6 +18,7 @@ pub struct Filter {
     good_keywords: Vec<String>,
     bad_keywords: Vec<String>,
     or_filter: bool,
+    fuzzy_match: bool,
 }
 
 #[derive(Eq, PartialEq)]
@@ -40,7 +41,12 @@ impl Filter {
     ///
     /// This simply takes the good and bad keywords and turns them into a
     /// vector. It also sets whether the filter is AND or OR-based.
-    pub fn new<S: AsRef<str>>(keywords: &[S], bad_keywords: &[S], or_filter: bool) -> Filter {
+    pub fn new<S: AsRef<str>>(
+        keywords: &[S],
+        bad_keywords: &[S],
+        or_filter: bool,
+        fuzzy_match: bool,
+    ) -> Filter {
         Filter {
             good_keywords: keywords.iter().map(|x| x.as_ref().to_string()).collect(),
             bad_keywords: bad_keywords
@@ -48,6 +54,7 @@ impl Filter {
                 .map(|x| x.as_ref().to_string())
                 .collect(),
             or_filter,
+            fuzzy_match,
         }
     }
 
@@ -66,12 +73,17 @@ impl Filter {
     ///     println!("MATCHES");
     /// }
     /// ```
-    pub fn matches<S: AsRef<str>>(&self, tags: &[S]) -> bool {
+    pub fn matches(&self, tags: &[String]) -> bool {
         let mut num_matches: usize = 0;
+        let matcher = if self.fuzzy_match {
+            Filter::vec_has_tag_fuzzy
+        } else {
+            Filter::vec_has_tag
+        };
         for tag in tags {
-            if self.bad_keywords.contains(&tag.as_ref().to_string()) {
+            if matcher(&self.bad_keywords, &tag) {
                 return false;
-            } else if self.good_keywords.contains(&tag.as_ref().to_string()) {
+            } else if matcher(&self.good_keywords, &tag) {
                 num_matches += 1;
             }
         }
@@ -82,6 +94,14 @@ impl Filter {
         }
     }
 
+    fn vec_has_tag(v: &[String], t: &str) -> bool {
+        v.contains(&t.to_string())
+    }
+
+    fn vec_has_tag_fuzzy(v: &[String], t: &str) -> bool {
+        v.iter().any(|haystack| t.contains(&haystack.to_string()))
+    }
+
     /// Extract ALL tags from files that match a filter
     ///
     /// Given a set of filenames (as `String`s), check if each file matches
@@ -90,7 +110,7 @@ impl Filter {
         let mut tagset: Set<String> = Set::new();
         for entry in files {
             let tags = get_tags_for_file(&entry);
-            if self.matches(&tags) {
+            if self.matches(tags.as_slice()) {
                 tagset.extend(tags);
             }
         }

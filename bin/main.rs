@@ -42,6 +42,10 @@ struct Opt {
     #[structopt(long)]
     similar_tags: bool,
 
+    /// Fuzzy-match tags
+    #[structopt(short, long)]
+    fuzzy: bool,
+
     /// Output format suitable for vim quickfix
     #[structopt(short, long)]
     vim: bool,
@@ -53,6 +57,7 @@ fn main() {
         args.keywords.as_slice(),
         args.not.as_slice(),
         args.or_filter,
+        args.fuzzy,
     );
 
     let files = match get_files(None) {

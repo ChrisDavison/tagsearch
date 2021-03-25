@@ -5,7 +5,7 @@
 ## Introduction
 
 This finds all instances of `@ALPHANUMERIC` (e.g. roughly matches the regex
-`@[a-zA-Z0-9]`) across `.txt`, `.md`, and `.org` recursively under the current 
+`@[a-zA-Z0-9]`) across `.txt`, `.md`, and `.org` recursively under the current
 directory.
 
 The *purpose* of this script is to basically let me manage information in
@@ -97,20 +97,20 @@ Examples
 
 ```
 # display all tags
-tagsearch                
+tagsearch
 
 # display all tags in a column (like ls -l)
-tagsearch --long          
+tagsearch --long
 
 # Show files tagged 'golang'
-tagsearch golang          
+tagsearch golang
 
 # List all tags that occur along with golang
-tagsearch -l golang       
+tagsearch -l golang
 
 # Show files tagged 'rust', but NOT tagged 'video'
-tagsearch rust --not video   
+tagsearch rust --not video
 
 # Show files that match spanish OR espanol
-tagsearch -o spanish espanol   
+tagsearch -o spanish espanol
 ```
