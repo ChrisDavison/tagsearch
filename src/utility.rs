@@ -1,4 +1,4 @@
-use std::collections::BTreeSet as Set;
+use std::collections::HashSet as Set;
 use std::fs::File;
 use std::io::Read;
 
