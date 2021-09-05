@@ -1,27 +1,21 @@
 [package]
-name = "tagsearch"
-version = "0.31.0"
 authors = ["Chris Davison <c.jr.davison@gmail.com>"]
+categories = ["command-line-interface", "text-processing"]
+description = "Filter plaintext files based on @keyword tags"
 edition = "2018"
 license = "MIT"
-description = "Filter plaintext files based on @keyword tags"
-repository = "https://www.github.com/ChrisDavison/tagsearch"
-readme = "README.md"
-categories = ["command-line-interface", "text-processing"]
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[lib]
 name = "tagsearch"
-path = "src/lib.rs"
+readme = "README.md"
+repository = "https://www.github.com/ChrisDavison/tagsearch"
+version = "0.32.0"
 
 [[bin]]
 name = "tagsearch"
 path = "bin/main.rs"
 
 [dependencies]
-regex = "1"
 glob = "0.3.0"
 lazy_static = "1.4.0"
-structopt = "0.3.3"
 rayon = "1.5.0"
+regex = "1"
+structopt = "0.3"

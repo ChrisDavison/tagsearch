@@ -71,39 +71,36 @@ impl Filter {
     /// use std::collections::BTreeSet as Set;
     /// let good = &[String::from("work"), String::from("project1")];
     /// let bad = &[String::from("project2")];
-    /// let f = tagsearch::filter::Filter::new(good, bad, false, false);
     /// let file_tags = &[String::from("work"), String::from("project3"), String::from("project3")].iter().cloned().collect::<Set<String>>();
     /// if f.matches(file_tags) {
     ///     println!("MATCHES");
     /// }
     /// ```
     pub fn matches(&self, tags: &Set<String>) -> bool {
-        let mut num_matches: usize = 0;
-        let matcher = if self.fuzzy_match {
-            Filter::has_tag_fuzzy
-        } else {
-            Filter::has_tag
-        };
+        let mut num_matching_tags: usize = 0;
         for tag in tags {
-            if matcher(&self.bad_keywords, tag) {
+            if self.tag_matches(&self.bad_keywords, tag) {
                 return false;
-            } else if matcher(&self.good_keywords, tag) {
-                num_matches += 1;
+            }
+            if self.tag_matches(&self.good_keywords, tag) {
+                num_matching_tags += 1;
             }
         }
-        if self.or_filter {
-            num_matches > 0
+        let matches_required = if self.or_filter {
+            1 // If we are using an or filter, any 1 match is good enough
         } else {
-            num_matches >= self.good_keywords.len()
+            self.good_keywords.len() // Otherwise, we must match all keywords
+        };
+        num_matching_tags >= matches_required
+    }
+
+    #[inline(always)]
+    fn tag_matches(&self, v: &Set<String>, t: &str) -> bool {
+        if self.fuzzy_match {
+            v.iter().any(|haystack| t.contains(&haystack.to_string()))
+        } else {
+            v.contains(&t.to_string())
         }
-    }
-
-    fn has_tag(v: &Set<String>, t: &str) -> bool {
-        v.contains(&t.to_string())
-    }
-
-    fn has_tag_fuzzy(v: &Set<String>, t: &str) -> bool {
-        v.iter().any(|haystack| t.contains(&haystack.to_string()))
     }
 
     /// Extract ALL tags from files that match a filter
