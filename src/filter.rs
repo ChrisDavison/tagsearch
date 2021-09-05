@@ -62,20 +62,6 @@ impl Filter {
     ///
     /// This takes a bunch of tags that have been pulled from a file, and
     /// checks if the good and bad keywords match.
-    ///
-    /// # Example
-    ///
-    /// Basic usage:
-    ///
-    /// ```
-    /// use std::collections::BTreeSet as Set;
-    /// let good = &[String::from("work"), String::from("project1")];
-    /// let bad = &[String::from("project2")];
-    /// let file_tags = &[String::from("work"), String::from("project3"), String::from("project3")].iter().cloned().collect::<Set<String>>();
-    /// if f.matches(file_tags) {
-    ///     println!("MATCHES");
-    /// }
-    /// ```
     pub fn matches(&self, tags: &Set<String>) -> bool {
         let mut num_matching_tags: usize = 0;
         for tag in tags {
