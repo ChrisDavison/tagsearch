@@ -1,9 +1,8 @@
-use std::collections::HashSet as Set;
+use std::collections::BTreeSet as Set;
 use std::fs::File;
 use std::io::Read;
 
 use glob::{glob, PatternError};
-use rayon::prelude::*;
 use regex::Regex;
 
 /// Get all files from either a passed path or under the current directory.
@@ -33,19 +32,46 @@ pub fn get_files(root: Option<String>) -> Result<Vec<String>, PatternError> {
 /// or `-`. The keyword must be separate from it's surroundings (e.g. `\b`
 /// in regex terminology)...spaces, start or end of line, punctuation all
 /// count as being a 'boundary'. The leading `@` will be stripped.
-pub fn get_tags_for_file(filename: &str) -> Vec<String> {
-    lazy_static! {
-        static ref RE: Regex = Regex::new(r"(?:^|\s)@(?P<keyword>[a-zA-Z_0-9\-]+)")
-            .expect("Couldn't create keyword regex");
-    }
+pub fn get_tags_for_file(filename: &str) -> Set<String> {
     let mut file =
         File::open(filename).unwrap_or_else(|_| panic!("Couldn't open file: `{:?}`", filename));
     let mut contents = String::new();
     file.read_to_string(&mut contents)
         .unwrap_or_else(|_| panic!("Couldn't read contents of file: `{:?}`", filename));
+    get_tags_from_string(&contents)
+}
+
+fn get_tags_from_string(contents: &str) -> Set<String> {
+    lazy_static! {
+        static ref RE: Regex = Regex::new(r"(?:^|\s)@(?P<keyword>[a-zA-Z_0-9\-]+)")
+            .expect("Couldn't create keyword regex");
+    }
     let mut keywords = Set::new();
-    for cap in RE.captures_iter(&contents) {
+    for cap in RE.captures_iter(contents) {
         keywords.insert(cap["keyword"].to_string());
     }
-    keywords.par_iter().cloned().collect()
+    keywords
+}
+
+#[allow(unused_imports)]
+mod tests {
+    use super::get_tags_from_string;
+    use std::collections::BTreeSet as Set;
+
+    #[test]
+    fn tags_from_string() {
+        let output = vec!["a", "b", "c"]
+            .iter()
+            .cloned()
+            .map(|x| x.to_string())
+            .collect::<Set<String>>();
+        let input = "@a @b @c";
+        assert_eq!(
+            get_tags_from_string(input)
+                .iter()
+                .cloned()
+                .collect::<Set<String>>(),
+            output
+        );
+    }
 }

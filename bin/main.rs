@@ -102,7 +102,7 @@ fn display_untagged(
 }
 
 fn display_similar_tags(f: filter::Filter, files: &[String]) -> Result<(), std::io::Error> {
-    let similar = f.similar_tags(&files);
+    let similar = f.similar_tags(files);
     if !similar.is_empty() {
         writeln!(&mut std::io::stdout(), "Similar tags:")?;
         for issue in similar {
@@ -121,7 +121,7 @@ fn display_files_matching_query(
         writeln!(
             &mut std::io::stdout(),
             "{}",
-            f.files_matching_tag_query(&files)
+            f.files_matching_tag_query(files)
                 .par_iter()
                 .map(|fname| format!("{}:1:", fname))
                 .collect::<Vec<String>>()
@@ -131,7 +131,7 @@ fn display_files_matching_query(
         writeln!(
             &mut std::io::stdout(),
             "{}",
-            f.files_matching_tag_query(&files).join("\n")
+            f.files_matching_tag_query(files).join("\n")
         )?;
     }
     Ok(())
@@ -146,13 +146,17 @@ fn display_tags(
     writeln!(
         &mut std::io::stdout(),
         "{}",
-        f.tags_matching_tag_query(files.to_vec()).join(joinchar)
+        f.tags_matching_tag_query(files)
+            .iter()
+            .cloned()
+            .collect::<Vec<String>>()
+            .join(joinchar)
     )?;
     Ok(())
 }
 
 fn display_tag_count(f: filter::Filter, files: &[String]) -> Result<(), std::io::Error> {
-    for (count, key) in f.count_of_tags(&files) {
+    for (count, key) in f.count_of_tags(files) {
         writeln!(&mut std::io::stdout(), "{:5} {}", count, key)?;
     }
     Ok(())

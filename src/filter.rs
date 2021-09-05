@@ -15,8 +15,8 @@ use rayon::prelude::*;
 /// bad words match.
 #[derive(Debug)]
 pub struct Filter {
-    good_keywords: Vec<String>,
-    bad_keywords: Vec<String>,
+    good_keywords: Set<String>,
+    bad_keywords: Set<String>,
     or_filter: bool,
     fuzzy_match: bool,
 }
@@ -68,25 +68,26 @@ impl Filter {
     /// Basic usage:
     ///
     /// ```
+    /// use std::collections::BTreeSet as Set;
     /// let good = &[String::from("work"), String::from("project1")];
     /// let bad = &[String::from("project2")];
     /// let f = tagsearch::filter::Filter::new(good, bad, false, false);
-    /// let file_tags = &[String::from("work"), String::from("project3"), String::from("project3")];
+    /// let file_tags = &[String::from("work"), String::from("project3"), String::from("project3")].iter().cloned().collect::<Set<String>>();
     /// if f.matches(file_tags) {
     ///     println!("MATCHES");
     /// }
     /// ```
-    pub fn matches(&self, tags: &[String]) -> bool {
+    pub fn matches(&self, tags: &Set<String>) -> bool {
         let mut num_matches: usize = 0;
         let matcher = if self.fuzzy_match {
-            Filter::vec_has_tag_fuzzy
+            Filter::has_tag_fuzzy
         } else {
-            Filter::vec_has_tag
+            Filter::has_tag
         };
         for tag in tags {
-            if matcher(&self.bad_keywords, &tag) {
+            if matcher(&self.bad_keywords, tag) {
                 return false;
-            } else if matcher(&self.good_keywords, &tag) {
+            } else if matcher(&self.good_keywords, tag) {
                 num_matches += 1;
             }
         }
@@ -97,49 +98,43 @@ impl Filter {
         }
     }
 
-    fn vec_has_tag(v: &[String], t: &str) -> bool {
+    fn has_tag(v: &Set<String>, t: &str) -> bool {
         v.contains(&t.to_string())
     }
 
-    fn vec_has_tag_fuzzy(v: &[String], t: &str) -> bool {
+    fn has_tag_fuzzy(v: &Set<String>, t: &str) -> bool {
         v.iter().any(|haystack| t.contains(&haystack.to_string()))
     }
 
     /// Extract ALL tags from files that match a filter
     ///
     /// Given a set of filenames (as `String`s), check if each file matches
-    /// the filter. If a file matches, append all of it's tags to a vector.
-    pub fn tags_matching_tag_query(&self, files: Vec<String>) -> Vec<String> {
-        let mut tagset: Set<String> = Set::new();
-        for entry in files {
-            let tags = get_tags_for_file(&entry);
-            if self.matches(tags.as_slice()) {
-                tagset.extend(tags);
-            }
-        }
-
-        tagset.par_iter().cloned().collect::<Vec<String>>()
+    /// the filter. If a file matches, gather all its tags.
+    pub fn tags_matching_tag_query(&self, files: &[String]) -> Set<String> {
+        files
+            .par_iter()
+            .map(|x| get_tags_for_file(x))
+            .filter(|x| self.matches(x))
+            .flatten()
+            .collect()
     }
 
     /// Extract all files that match a filter
     ///
-    /// Given a set of filenames (as `String`s), check if each file matches
-    /// the filter. If a file matches, append it to the vector.
+    /// Given a set of filenames (as `String`s), filter to only those containing matching tags.
     pub fn files_matching_tag_query(&self, files: &[String]) -> Vec<String> {
-        let matching_files: Vec<String> = files
+        files
             .par_iter()
-            .filter(|fname| self.matches(get_tags_for_file(&fname).as_ref()))
+            .filter(|fname| self.matches(&get_tags_for_file(fname)))
             .map(|fname| fname.to_string())
-            .collect();
-
-        matching_files
+            .collect::<Vec<String>>()
     }
 
     /// Get all files without tags
     pub fn untagged_files(&self, files: &[String]) -> Vec<String> {
         files
             .par_iter()
-            .filter(|x| get_tags_for_file(&x).is_empty())
+            .filter(|x| get_tags_for_file(x).is_empty())
             .map(|x| x.to_string())
             .collect()
     }
@@ -155,7 +150,7 @@ impl Filter {
     pub fn similar_tags(&self, files: &[String]) -> Vec<Issue> {
         let mut tagset: Set<String> = Set::new();
         for entry in files {
-            let tags = get_tags_for_file(&entry);
+            let tags = get_tags_for_file(entry);
             tagset.extend(tags);
         }
         let mut similar = Vec::new();
@@ -188,7 +183,7 @@ impl Filter {
     pub fn count_of_tags(&self, files: &[String]) -> Vec<(usize, String)> {
         let mut tagmap: Map<String, usize> = Map::new();
         for entry in files {
-            for tag in get_tags_for_file(&entry) {
+            for tag in get_tags_for_file(entry) {
                 match tagmap.get_mut(&tag) {
                     Some(val) => *val += 1,
                     None => {
@@ -197,11 +192,75 @@ impl Filter {
                 }
             }
         }
-        let mut out = Vec::new();
-        for (key, val) in tagmap {
-            out.push((val, key));
-        }
+        let mut out: Vec<_> = tagmap.iter().map(|(k, v)| (*v, k.clone())).collect();
         out.sort_by(|a, b| a.0.cmp(&b.0).reverse());
         out
+    }
+}
+
+#[allow(unused_imports)]
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn match_good() {
+        let f = Filter::new(&["stoicism", "philosophy"], &[], false, false);
+        let tags_for_fake_file = [String::from("stoicism"), String::from("philosophy")]
+            .iter()
+            .cloned()
+            .collect::<Set<String>>();
+
+        assert!(f.matches(&tags_for_fake_file));
+    }
+
+    #[test]
+    fn match_good_or() {
+        let f = Filter::new(&["stoicism", "philosophy"], &[], true, false);
+        let tags_for_fake_file = [String::from("stoicism"), String::from("philosophy")]
+            .iter()
+            .cloned()
+            .collect::<Set<String>>();
+
+        assert!(f.matches(&tags_for_fake_file));
+    }
+
+    #[test]
+    fn match_good_fuzzy() {
+        let f = Filter::new(&["stoic"], &[], false, true);
+        let tags_for_fake_file = [String::from("stoicism")]
+            .iter()
+            .cloned()
+            .collect::<Set<String>>();
+
+        assert!(f.matches(&tags_for_fake_file));
+    }
+
+    #[test]
+    fn match_bad() {
+        let f = Filter::new(&[], &["donkey"], false, false);
+        let tags_for_fake_file = [
+            String::from("stoicism"),
+            String::from("philosophy"),
+            String::from("donkey"),
+        ]
+        .iter()
+        .cloned()
+        .collect::<Set<String>>();
+        assert!(!f.matches(&tags_for_fake_file));
+    }
+
+    #[test]
+    fn match_good_and_bad_fuzzy() {
+        let f = Filter::new(&["stoic"], &["donkey"], false, true);
+        let tags_for_fake_file = [
+            String::from("stoicism"),
+            String::from("philosophy"),
+            String::from("donkey"),
+        ]
+        .iter()
+        .cloned()
+        .collect();
+        assert!(!f.matches(&tags_for_fake_file));
     }
 }
