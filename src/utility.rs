@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use std::collections::BTreeSet as Set;
 use std::fs::File;
 use std::io::Read;
@@ -53,13 +54,17 @@ fn get_tags_from_string(contents: &str) -> Set<String> {
     keywords
 }
 
+fn parse_heirarchical_tag(s: &str) -> Vec<&str> {
+    s.trim_start_matches("@").split("/").collect::<Vec<&str>>()
+}
+
 #[allow(unused_imports)]
 mod tests {
     use super::*;
     use std::collections::BTreeSet as Set;
 
     #[test]
-    fn tags_from_string() {
+    fn test_tags_from_string() {
         let output = vec!["a", "b", "c"]
             .iter()
             .cloned()
@@ -67,5 +72,17 @@ mod tests {
             .collect::<Set<String>>();
         let input = "@a @b @c";
         assert_eq!(get_tags_from_string(input), output);
+    }
+
+    #[test]
+    fn test_parse_heirarchical_tag() {
+        let tests = vec![
+            ("@d/e/f", vec!["d", "e", "f"]),
+            ("@delta/gamma", vec!["delta", "gamma"]),
+            ("@single", vec!["single"]),
+        ];
+        for (inp, outp) in tests {
+            assert_eq!(parse_heirarchical_tag(inp), outp);
+        }
     }
 }
