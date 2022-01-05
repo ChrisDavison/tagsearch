@@ -5,6 +5,7 @@ use std::io::Read;
 
 use glob::{glob, PatternError};
 use regex::Regex;
+use super::Tag;
 
 /// Get all files from either a passed path or under the current directory.
 ///
@@ -33,29 +34,29 @@ pub fn get_files(root: Option<String>) -> Result<Vec<String>, PatternError> {
 /// or `-`. The keyword must be separate from it's surroundings (e.g. `\b`
 /// in regex terminology)...spaces, start or end of line, punctuation all
 /// count as being a 'boundary'. The leading `@` will be stripped.
-pub fn get_tags_for_file(filename: &str) -> Set<String> {
+pub fn get_tags_for_file(filename: &str) -> Set<Tag> {
     let mut file =
         File::open(filename).unwrap_or_else(|_| panic!("Couldn't open file: `{:?}`", filename));
     let mut contents = String::new();
     file.read_to_string(&mut contents)
         .unwrap_or_else(|_| panic!("Couldn't read contents of file: `{:?}`", filename));
-    get_tags_from_string(&contents)
+    get_tags_from_string(&contents.clone())
 }
 
-fn get_tags_from_string(contents: &str) -> Set<String> {
+fn get_tags_from_string(contents: &str) -> Set<Tag> {
     lazy_static! {
         static ref RE: Regex = Regex::new(r"(?:^|\s)@(?P<keyword>[a-zA-Z_0-9\-/]+)")
             .expect("Couldn't create keyword regex");
     }
     let mut keywords = Set::new();
     for cap in RE.captures_iter(contents) {
-        keywords.insert(cap["keyword"].to_string());
+        keywords.insert(parse_heirarchical_tag(&cap["keyword"]));
     }
     keywords
 }
 
-fn parse_heirarchical_tag(s: &str) -> Vec<&str> {
-    s.trim_start_matches("@").split("/").collect::<Vec<&str>>()
+fn parse_heirarchical_tag(s: &str) -> Vec<String> {
+    s.trim_start_matches("@").split("/").map(|x| x.to_string()).collect::<Vec<String>>()
 }
 
 #[allow(unused_imports)]

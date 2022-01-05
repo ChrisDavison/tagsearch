@@ -2,6 +2,7 @@ use crate::utility::get_tags_for_file;
 
 use std::collections::{BTreeMap as Map, BTreeSet as Set};
 
+use super::Tag;
 use rayon::prelude::*;
 
 /// The `Filter` struct is used for filtering files for tags
@@ -62,13 +63,18 @@ impl Filter {
     ///
     /// This takes a bunch of tags that have been pulled from a file, and
     /// checks if the good and bad keywords match.
-    pub fn matches(&self, tags: &Set<String>) -> bool {
+    pub fn matches(&self, tags: &Set<Tag>) -> bool {
         let mut num_matching_tags: usize = 0;
-        for tag in tags {
-            if self.tag_matches(&self.bad_keywords, tag) {
-                return false;
+        for heirarchicaltag in tags {
+            for tag in heirarchicaltag {
+                if self.tag_matches(&self.bad_keywords, tag) {
+                    return false;
+                }
+                if self.tag_matches(&self.good_keywords, tag) {
+                    num_matching_tags += 1;
+                }
             }
-            if self.tag_matches(&self.good_keywords, tag) {
+            if self.tag_matches(&self.good_keywords, &heirarchicaltag.join("/")) {
                 num_matching_tags += 1;
             }
         }
@@ -93,7 +99,7 @@ impl Filter {
     ///
     /// Given a set of filenames (as `String`s), check if each file matches
     /// the filter. If a file matches, gather all its tags.
-    pub fn tags_matching_tag_query(&self, files: &[String]) -> Set<String> {
+    pub fn tags_matching_tag_query(&self, files: &[String]) -> Set<Tag> {
         files
             .par_iter()
             .map(|x| get_tags_for_file(x))
@@ -131,32 +137,53 @@ impl Filter {
     /// If the pair (A,B) is listed as having a problem, the pair (B,A) WILL
     /// NOT be added to the result.
     pub fn similar_tags(&self, files: &[String]) -> Vec<Issue> {
-        let mut tagset: Set<String> = Set::new();
+        let mut tagset: Set<Tag> = Set::new();
         for entry in files {
-            let tags = get_tags_for_file(entry);
-            tagset.extend(tags);
+            let heirarchicaltags = get_tags_for_file(entry);
+            tagset.extend(heirarchicaltags);
         }
         let mut similar = Vec::new();
-        for key in &tagset {
-            for key2 in &tagset {
-                if key == key2 {
-                    continue;
+        for ts1 in &tagset {
+            for ts2 in &tagset {
+                if let Some(issue) = Filter::compare_heirarchical_tags(ts1, ts2) {
+                    if !similar.contains(&issue) {
+                        similar.push(issue);
+                    }
                 }
-                let issue = if key.to_lowercase() == key2.to_lowercase() {
-                    // Ensure we don't add B-A if we've flagged A-B
-                    Issue::Case(key.to_string(), key2.to_string())
-                } else if key.trim_end_matches('s') == key2.trim_end_matches('s') {
-                    // Ensure we don't add B-A if we've flagged A-B
-                    Issue::Plural(key.to_string(), key2.to_string())
-                } else {
-                    continue;
-                };
-                if !similar.contains(&issue) {
-                    similar.push(issue);
-                }
+                // if key == key2 {
+                //     continue;
+                // }
+                // let issue = if key.to_lowercase() == key2.to_lowercase() {
+                //     // Ensure we don't add B-A if we've flagged A-B
+                //     Issue::Case(key.to_string(), key2.to_string())
+                // } else if key.trim_end_matches('s') == key2.trim_end_matches('s') {
+                //     // Ensure we don't add B-A if we've flagged A-B
+                //     Issue::Plural(key.to_string(), key2.to_string())
+                // } else {
+                //     continue;
+                // };
+                // if !similar.contains(&issue) {
+                //     similar.push(issue);
+                // }
             }
         }
         similar
+    }
+
+    fn compare_heirarchical_tags(t1: &Tag, t2: &Tag) -> Option<Issue> {
+        for (key, key2) in t1.iter().zip(t2.iter()) {
+            if key == key2 {
+                continue;
+            }
+            if key.to_lowercase() == key2.to_lowercase() {
+                // Ensure we don't add B-A if we've flagged A-B
+                return Some(Issue::Case(key.to_string(), key2.to_string()));
+            } else if key.trim_end_matches('s') == key2.trim_end_matches('s') {
+                // Ensure we don't add B-A if we've flagged A-B
+                return Some(Issue::Plural(key.to_string(), key2.to_string()));
+            }
+        }
+        None
     }
 
     /// Count the number of occurences of each tag
@@ -167,10 +194,22 @@ impl Filter {
         let mut tagmap: Map<String, usize> = Map::new();
         for entry in files {
             for tag in get_tags_for_file(entry) {
-                match tagmap.get_mut(&tag) {
-                    Some(val) => *val += 1,
-                    None => {
-                        tagmap.insert(tag, 1);
+                for subtag in &tag {
+                    match tagmap.get_mut(&subtag.to_string()) {
+                        Some(val) => *val += 1,
+                        None => {
+                            tagmap.insert(subtag.to_string(), 1);
+                        }
+                    }
+                }
+
+                if tag.len() > 1 {
+                    let fulltag = tag.join("/");
+                    match tagmap.get_mut(&fulltag) {
+                        Some(val) => *val += 1,
+                        None => {
+                            tagmap.insert(fulltag, 1);
+                        }
                     }
                 }
             }

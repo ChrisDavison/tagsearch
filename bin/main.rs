@@ -149,6 +149,7 @@ fn display_tags(
         f.tags_matching_tag_query(files)
             .iter()
             .cloned()
+            .map(|tagset| tagset.join("/"))
             .collect::<Vec<String>>()
             .join(joinchar)
     )?;
