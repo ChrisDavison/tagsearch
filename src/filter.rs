@@ -231,7 +231,8 @@ mod tests {
         let tags_for_fake_file = [String::from("stoicism"), String::from("philosophy")]
             .iter()
             .cloned()
-            .collect::<Set<String>>();
+            .map(|x| vec![x])
+            .collect::<Set<Vec<String>>>();
 
         assert!(f.matches(&tags_for_fake_file));
     }
@@ -242,7 +243,8 @@ mod tests {
         let tags_for_fake_file = [String::from("stoicism"), String::from("philosophy")]
             .iter()
             .cloned()
-            .collect::<Set<String>>();
+            .map(|x| vec![x])
+            .collect::<Set<Vec<String>>>();
 
         assert!(f.matches(&tags_for_fake_file));
     }
@@ -253,7 +255,8 @@ mod tests {
         let tags_for_fake_file = [String::from("stoicism")]
             .iter()
             .cloned()
-            .collect::<Set<String>>();
+            .map(|x| vec![x])
+            .collect::<Set<Vec<String>>>();
 
         assert!(f.matches(&tags_for_fake_file));
     }
@@ -268,7 +271,8 @@ mod tests {
         ]
         .iter()
         .cloned()
-        .collect::<Set<String>>();
+        .map(|x| vec![x])
+        .collect::<Set<Vec<String>>>();
         assert!(!f.matches(&tags_for_fake_file));
     }
 
@@ -276,12 +280,13 @@ mod tests {
     fn match_good_and_bad_fuzzy() {
         let f = Filter::new(&["stoic"], &["donkey"], false, true);
         let tags_for_fake_file = [
-            String::from("stoicism"),
-            String::from("philosophy"),
-            String::from("donkey"),
+            "stoicism".to_string(),
+            "philosophy".to_string(),
+            "donkey".to_string(),
         ]
         .iter()
         .cloned()
+        .map(|x| vec![x])
         .collect();
         assert!(!f.matches(&tags_for_fake_file));
     }

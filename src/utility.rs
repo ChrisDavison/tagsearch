@@ -69,8 +69,8 @@ mod tests {
         let output = vec!["a", "b", "c"]
             .iter()
             .cloned()
-            .map(|x| x.to_string())
-            .collect::<Set<String>>();
+            .map(|x| vec![x.to_string()])
+            .collect::<Set<Vec<String>>>();
         let input = "@a @b @c";
         assert_eq!(get_tags_from_string(input), output);
     }
