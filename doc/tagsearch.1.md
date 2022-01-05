@@ -47,12 +47,13 @@ Search for all **keyword** tags for files under the current directory.
 
 # NOTES
 
-A **tag** is something that matches the regexp **\@[a-zA-Z1-9]+**, 
-i.e. **\@** followed by anything **alphanumeric**.
+A **tag** is something that matches the regexp **\@[a-zA-Z1-9/]+**, 
+i.e. **\@** followed by anything **alphanumeric** or **/** (to allow for 'heirarchy').
 
     @rust
     @linux
     @c99
+    @programming/c99
 
 # AUTHORS
 

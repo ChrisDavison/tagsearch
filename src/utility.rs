@@ -43,7 +43,7 @@ pub fn get_tags_for_file(filename: &str) -> Set<String> {
 
 fn get_tags_from_string(contents: &str) -> Set<String> {
     lazy_static! {
-        static ref RE: Regex = Regex::new(r"(?:^|\s)@(?P<keyword>[a-zA-Z_0-9\-]+)")
+        static ref RE: Regex = Regex::new(r"(?:^|\s)@(?P<keyword>[a-zA-Z_0-9\-/]+)")
             .expect("Couldn't create keyword regex");
     }
     let mut keywords = Set::new();
@@ -55,7 +55,7 @@ fn get_tags_from_string(contents: &str) -> Set<String> {
 
 #[allow(unused_imports)]
 mod tests {
-    use super::get_tags_from_string;
+    use super::*;
     use std::collections::BTreeSet as Set;
 
     #[test]
@@ -66,12 +66,6 @@ mod tests {
             .map(|x| x.to_string())
             .collect::<Set<String>>();
         let input = "@a @b @c";
-        assert_eq!(
-            get_tags_from_string(input)
-                .iter()
-                .cloned()
-                .collect::<Set<String>>(),
-            output
-        );
+        assert_eq!(get_tags_from_string(input), output);
     }
 }
