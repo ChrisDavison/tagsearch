@@ -212,7 +212,7 @@ mod tests {
 
     #[test]
     fn match_good() {
-        let f = Filter::new(&["stoicism", "philosophy"], &[], false, false, None);
+        let f = Filter::new(&["stoicism", "philosophy"], &[], false, false);
         let tags_for_fake_file = ["stoicism", "philosophy"]
             .iter()
             .cloned()
@@ -224,7 +224,7 @@ mod tests {
 
     #[test]
     fn match_good_or() {
-        let f = Filter::new(&["stoicism", "philosophy"], &[], true, false, None);
+        let f = Filter::new(&["stoicism", "philosophy"], &[], true, false);
         let tags_for_fake_file = ["stoicism", "philosophy"]
             .iter()
             .cloned()
@@ -236,7 +236,7 @@ mod tests {
 
     #[test]
     fn match_good_fuzzy() {
-        let f = Filter::new(&["stoic"], &[], false, true, None);
+        let f = Filter::new(&["stoic"], &[], false, true);
         let tags_for_fake_file = ["stoicism"]
             .iter()
             .cloned()
@@ -248,7 +248,7 @@ mod tests {
 
     #[test]
     fn match_bad() {
-        let f = Filter::new(&[], &["donkey"], false, false, None);
+        let f = Filter::new(&[], &["donkey"], false, false);
         let tags_for_fake_file = ["stoicism", "philosophy", "donkey"]
             .iter()
             .cloned()
@@ -259,7 +259,7 @@ mod tests {
 
     #[test]
     fn match_good_and_bad_fuzzy() {
-        let f = Filter::new(&["stoic"], &["donkey"], false, true, None);
+        let f = Filter::new(&["stoic"], &["donkey"], false, true);
         let tags_for_fake_file = ["stoicism", "philosophy", "donkey"]
             .iter()
             .cloned()
