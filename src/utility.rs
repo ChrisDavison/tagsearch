@@ -3,9 +3,9 @@ use std::collections::BTreeSet as Set;
 use std::fs::File;
 use std::io::Read;
 
+use super::Tag;
 use glob::{glob, PatternError};
 use regex::Regex;
-use super::Tag;
 
 /// Get all files from either a passed path or under the current directory.
 ///
@@ -55,8 +55,39 @@ fn get_tags_from_string(contents: &str) -> Set<Tag> {
     keywords
 }
 
+pub fn display_as_tree(heirarchy: &[Tag]) -> String {
+    let mut heirarchy: Vec<Tag> = heirarchy.iter().cloned().collect();
+    heirarchy.sort();
+    let mut path: Vec<String> = vec![];
+    let mut output = String::new();
+    for tagset in heirarchy {
+        // println!("NEW HEIRARCHY {:?}", tagset);
+        for (i, tag) in tagset.iter().enumerate() {
+            if let Some(t) = path.get(i) {
+                if t == tag {
+                    continue;
+                } else {
+                    while path.len() > i {
+                        // println!("UNWINDING {:?}", path);
+                        path.pop();
+                    }
+                    path.push(tag.to_string());
+                }
+            } else {
+                path.push(tag.to_string());
+            }
+            let indents = "    ".repeat(path.len() - 1);
+            output.push_str(&format!("{}{}\n", indents, path[path.len() - 1]));
+        }
+    }
+    output
+}
+
 fn parse_heirarchical_tag(s: &str) -> Vec<String> {
-    s.trim_start_matches("@").split("/").map(|x| x.to_string()).collect::<Vec<String>>()
+    s.trim_start_matches("@")
+        .split("/")
+        .map(|x| x.to_string())
+        .collect::<Vec<String>>()
 }
 
 #[allow(unused_imports)]
@@ -66,13 +97,46 @@ mod tests {
 
     #[test]
     fn test_tags_from_string() {
-        let output = vec!["a", "b", "c"]
+        let output = vec![vec!["a"], vec!["b"], vec!["c"], vec!["d", "e", "f"]]
             .iter()
             .cloned()
-            .map(|x| vec![x.to_string()])
+            .map(|v| v.iter().map(|x| x.to_string()).collect())
             .collect::<Set<Vec<String>>>();
-        let input = "@a @b @c";
+        let input = "@a @b @c @d/e/f";
         assert_eq!(get_tags_from_string(input), output);
+    }
+
+    #[test]
+    fn display_as_tree__singletree_test() {
+        let output = String::from("philosophy\n    mindset\n    stoicism\n        quote\n");
+        let input = vec![
+            vec![
+                "philosophy".to_string(),
+                "stoicism".to_string(),
+                "quote".to_string(),
+            ],
+            vec!["philosophy".to_string(), "mindset".to_string()],
+        ];
+        assert_eq!(display_as_tree(&input), output);
+    }
+
+    #[test]
+    fn display_as_tree__doubletree_test() {
+        let output2 = String::from("completely\n    unrelated\n        heirarchy\nphilosophy\n    mindset\n    stoicism\n        quote\n");
+        let input2 = vec![
+            vec![
+                "philosophy".to_string(),
+                "stoicism".to_string(),
+                "quote".to_string(),
+            ],
+            vec!["philosophy".to_string(), "mindset".to_string()],
+            vec![
+                "completely".to_string(),
+                "unrelated".to_string(),
+                "heirarchy".to_string(),
+            ],
+        ];
+        assert_eq!(display_as_tree(&input2), output2);
     }
 
     #[test]

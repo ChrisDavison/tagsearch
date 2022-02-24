@@ -3,9 +3,9 @@ use std::io::Write;
 use structopt::StructOpt;
 
 use rayon::prelude::*;
-use tagsearch::{filter, utility::*};
+use tagsearch::{filter, utility::*, Tag};
 
-#[derive(Debug, StructOpt)]
+#[derive(StructOpt)]
 #[structopt(
     name = "tagsearch",
     about = "search for, and/or summarise, tags in plaintext files"
@@ -142,17 +142,19 @@ fn display_tags(
     files: &[String],
     long_list: bool,
 ) -> Result<(), std::io::Error> {
-    let joinchar = if long_list { "\n" } else { ", " };
-    writeln!(
-        &mut std::io::stdout(),
-        "{}",
-        f.tags_matching_tag_query(files)
+    // Convert the Btreeset into a vec
+    let tags: Vec<Tag> = f.tags_matching_tag_query(files).iter().cloned().collect();
+
+    if long_list {
+        writeln!(&mut std::io::stdout(), "{}", display_as_tree(&tags))?;
+    } else {
+        let tags = tags
             .iter()
-            .cloned()
-            .map(|tagset| tagset.join("/"))
+            .map(|tags| tags.join("/"))
             .collect::<Vec<String>>()
-            .join(joinchar)
-    )?;
+            .join(", ");
+        writeln!(&mut std::io::stdout(), "{}", tags)?;
+    }
     Ok(())
 }
 
