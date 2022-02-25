@@ -1,65 +1,69 @@
 use std::io::Write;
 
-use structopt::StructOpt;
+use tagsearch::{filter::Filter, utility::*, Tag};
 
-use rayon::prelude::*;
-use tagsearch::{filter, utility::*, Tag};
+use clap::{Parser, Subcommand};
 
-#[derive(StructOpt)]
-#[structopt(
-    name = "tagsearch",
-    about = "search for, and/or summarise, tags in plaintext files"
-)]
-struct Opt {
-    /// Keywords to filter
-    keywords: Vec<String>,
-
-    /// Keywords to inverse filter (i.e. ignore matching files)
-    #[structopt(long)]
-    not: Vec<String>,
-
-    /// List all tags for files matching keywords
-    #[structopt(short, long)]
-    list: bool,
-
-    /// Long list (e.g. tall) all tags for files matching keywords
-    #[structopt(long)]
-    long: bool,
-
-    /// Filter using ANY, rather than ALL keywords
-    #[structopt(short, long)]
-    or_filter: bool,
-
-    /// Show untagged files
-    #[structopt(short, long)]
-    untagged: bool,
-
-    /// Show count of tags
-    #[structopt(short, long)]
-    count: bool,
-
-    /// Show similar tags
-    #[structopt(long)]
-    similar_tags: bool,
-
-    /// Fuzzy-match tags
-    #[structopt(short, long)]
-    fuzzy: bool,
-
-    /// Output format suitable for vim quickfix
-    #[structopt(short, long)]
-    vim: bool,
+#[derive(Parser)]
+#[clap(author, version, about, long_about = None)]
+#[clap(propagate_version = true)]
+struct Cli {
+    #[clap(subcommand)]
+    command: Commands,
 }
 
-fn main() {
-    let args = Opt::from_args();
-    let f = filter::Filter::new(
-        args.keywords.as_slice(),
-        args.not.as_slice(),
-        args.or_filter,
-        args.fuzzy,
-    );
+#[derive(Subcommand)]
+enum Commands {
+    /// Show files that have tags matching filter words
+    Files {
+        /// Keywords to match
+        good: Vec<String>,
+        #[clap(long, require_value_delimiter(true))]
+        /// Keywords to NOT match
+        not: Vec<String>,
+        /// Output in format suitable for vimgrep
+        #[clap(long)]
+        vim: bool,
+        /// Fuzzy-match on tag string
+        #[clap(short, long)]
+        fuzzy: bool,
+        /// Match ANY, not ALL, tags
+        #[clap(short, long)]
+        or: bool,
+    },
+    /// Show all tags from files with tags that match filter words
+    Tags {
+        /// Keywords to match
+        good: Vec<String>,
+        #[clap(long, require_value_delimiter(true))]
+        /// Keywords to NOT match
+        not: Vec<String>,
+        #[clap(short, long)]
+        /// Fuzzy-match on tag string
+        fuzzy: bool,
+        #[clap(short, long)]
+        /// Match ANY, not ALL, tags
+        or: bool,
+        /// Show how many times tag used
+        #[clap(short, long)]
+        count: bool,
+        /// Output in long format (tree-like)
+        #[clap(short, long)]
+        long: bool,
+    },
+    /// Show files without tags
+    Untagged {
+        /// Output in format suitable for vimgrep
+        #[clap(long)]
+        vim: bool,
+    },
+    /// Show tags that may be typos/slight differences
+    #[clap(aliases=&["similar", "related"])]
+    SimilarTags,
+}
 
+fn try_main() -> Result<(), std::io::Error> {
+    let cli = Cli::parse();
     let files = match get_files(None) {
         Ok(files) => files,
         Err(e) => {
@@ -68,17 +72,39 @@ fn main() {
         }
     };
 
-    if let Err(e) = if args.untagged {
-        display_untagged(f, &files, args.vim)
-    } else if args.similar_tags {
-        display_similar_tags(f, &files)
-    } else if args.count {
-        display_tag_count(f, &files)
-    } else if args.list || args.long || args.keywords.is_empty() {
-        display_tags(f, &files, args.long)
-    } else {
-        display_files_matching_query(f, &files, args.vim)
-    } {
+    match &cli.command {
+        Commands::Files {
+            good,
+            not,
+            vim,
+            or,
+            fuzzy,
+        } => {
+            let f = Filter::new(good.as_slice(), not.as_slice(), *or, *fuzzy);
+            display_files_matching_query(f, &files, *vim)
+        }
+        Commands::Tags {
+            good,
+            not,
+            or,
+            fuzzy,
+            count,
+            long,
+        } => {
+            let f = Filter::new(good.as_slice(), not.as_slice(), *or, *fuzzy);
+            if *count {
+                display_tag_count(f, &files)
+            } else {
+                display_tags(f, &files, *long)
+            }
+        }
+        Commands::Untagged { vim } => display_untagged(&files, *vim),
+        Commands::SimilarTags => display_similar_tags(&files),
+    }
+}
+
+fn main() {
+    if let Err(e) = try_main() {
         if e.kind() != std::io::ErrorKind::BrokenPipe {
             eprintln!("{}", e);
             std::process::exit(1);
@@ -86,11 +112,8 @@ fn main() {
     }
 }
 
-fn display_untagged(
-    f: filter::Filter,
-    files: &[String],
-    vim_format: bool,
-) -> Result<(), std::io::Error> {
+fn display_untagged(files: &[String], vim_format: bool) -> Result<(), std::io::Error> {
+    let f = Filter::default();
     for fname in f.untagged_files(files) {
         if vim_format {
             writeln!(&mut std::io::stdout(), "{}:1:NO TAGS", fname)?;
@@ -101,7 +124,8 @@ fn display_untagged(
     Ok(())
 }
 
-fn display_similar_tags(f: filter::Filter, files: &[String]) -> Result<(), std::io::Error> {
+fn display_similar_tags(files: &[String]) -> Result<(), std::io::Error> {
+    let f = Filter::default();
     let similar = f.similar_tags(files);
     if !similar.is_empty() {
         writeln!(&mut std::io::stdout(), "Similar tags:")?;
@@ -113,7 +137,7 @@ fn display_similar_tags(f: filter::Filter, files: &[String]) -> Result<(), std::
 }
 
 fn display_files_matching_query(
-    f: filter::Filter,
+    f: Filter,
     files: &[String],
     vim_format: bool,
 ) -> Result<(), std::io::Error> {
@@ -122,7 +146,11 @@ fn display_files_matching_query(
         for filename in f.files_matching_tag_query(files) {
             let contents = std::fs::read_to_string(filename.clone())?;
             for (i, line) in contents.lines().enumerate() {
-                if f.matches(&get_tags_from_string(&line)) {
+                let tags_in_line = get_tags_from_string(line);
+                if tags_in_line.is_empty() {
+                    continue;
+                }
+                if f.matches(&tags_in_line) {
                     vimstrings.push(format!("{}:{}:{}", filename, i + 1, line));
                 }
             }
@@ -138,11 +166,7 @@ fn display_files_matching_query(
     Ok(())
 }
 
-fn display_tags(
-    f: filter::Filter,
-    files: &[String],
-    long_list: bool,
-) -> Result<(), std::io::Error> {
+fn display_tags(f: Filter, files: &[String], long_list: bool) -> Result<(), std::io::Error> {
     // Convert the Btreeset into a vec
     let tags: Vec<Tag> = f.tags_matching_tag_query(files).iter().cloned().collect();
 
@@ -159,7 +183,7 @@ fn display_tags(
     Ok(())
 }
 
-fn display_tag_count(f: filter::Filter, files: &[String]) -> Result<(), std::io::Error> {
+fn display_tag_count(f: Filter, files: &[String]) -> Result<(), std::io::Error> {
     for (count, key) in f.count_of_tags(files) {
         writeln!(&mut std::io::stdout(), "{:5} {}", count, key)?;
     }
