@@ -56,7 +56,7 @@ pub fn get_tags_from_string(contents: &str) -> Set<Tag> {
 }
 
 pub fn display_as_tree(heirarchy: &[Tag]) -> String {
-    let mut heirarchy: Vec<Tag> = heirarchy.iter().cloned().collect();
+    let mut heirarchy: Vec<Tag> = heirarchy.to_vec();
     heirarchy.sort();
     let mut path: Vec<String> = vec![];
     let mut output = String::new();
@@ -84,8 +84,8 @@ pub fn display_as_tree(heirarchy: &[Tag]) -> String {
 }
 
 fn parse_heirarchical_tag(s: &str) -> Vec<String> {
-    s.trim_start_matches("@")
-        .split("/")
+    s.trim_start_matches('@')
+        .split('/')
         .map(|x| x.to_string())
         .collect::<Vec<String>>()
 }

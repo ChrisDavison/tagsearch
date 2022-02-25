@@ -7,7 +7,7 @@ license = "MIT"
 name = "tagsearch"
 readme = "README.md"
 repository = "https://www.github.com/ChrisDavison/tagsearch"
-version = "0.33.0"
+version = "0.34.0"
 
 [[bin]]
 name = "tagsearch"
@@ -18,4 +18,4 @@ glob = "0.3.0"
 lazy_static = "1.4.0"
 rayon = "1.5.0"
 regex = "1"
-structopt = "0.3"
+clap = { version = "3.1.2", features = ["derive", "cargo"] }

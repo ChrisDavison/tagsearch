@@ -14,7 +14,7 @@ use rayon::prelude::*;
 /// and no bad words must exist. The filter can be made into an OR filter,
 /// where a file will be returned if ANY good word matches the file and NO
 /// bad words match.
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Filter {
     good_keywords: Set<String>,
     bad_keywords: Set<String>,
@@ -180,7 +180,7 @@ impl Filter {
         for entry in files {
             for tag in get_tags_for_file(entry) {
                 for subtag in &tag {
-                    match tagmap.get_mut(&subtag.to_string()) {
+                    match tagmap.get_mut(subtag) {
                         Some(val) => *val += 1,
                         None => {
                             tagmap.insert(subtag.to_string(), 1);
