@@ -88,7 +88,7 @@ impl Filter {
 
     #[inline(always)]
     fn tag_matches(&self, v: &Set<String>, t: &str) -> bool {
-        if self.fuzzy_match {
+        if self.fuzzy_match || t.contains('/') {
             v.iter().any(|haystack| t.contains(&haystack.to_string()))
         } else {
             v.contains(&t.to_string())

@@ -43,7 +43,7 @@ pub fn get_tags_for_file(filename: &str) -> Set<Tag> {
     get_tags_from_string(&contents.clone())
 }
 
-fn get_tags_from_string(contents: &str) -> Set<Tag> {
+pub fn get_tags_from_string(contents: &str) -> Set<Tag> {
     lazy_static! {
         static ref RE: Regex = Regex::new(r"(?:^|\s)@(?P<keyword>[a-zA-Z_0-9\-/]+)")
             .expect("Couldn't create keyword regex");

@@ -93,7 +93,7 @@ fn display_untagged(
 ) -> Result<(), std::io::Error> {
     for fname in f.untagged_files(files) {
         if vim_format {
-            writeln!(&mut std::io::stdout(), "{}:1:Ignore this message", fname)?;
+            writeln!(&mut std::io::stdout(), "{}:1:NO TAGS", fname)?;
         } else {
             writeln!(&mut std::io::stdout(), "{}", fname)?;
         }
@@ -118,15 +118,16 @@ fn display_files_matching_query(
     vim_format: bool,
 ) -> Result<(), std::io::Error> {
     if vim_format {
-        writeln!(
-            &mut std::io::stdout(),
-            "{}",
-            f.files_matching_tag_query(files)
-                .par_iter()
-                .map(|fname| format!("{}:1:", fname))
-                .collect::<Vec<String>>()
-                .join("\n")
-        )?;
+        let mut vimstrings: Vec<String> = Vec::new();
+        for filename in f.files_matching_tag_query(files) {
+            let contents = std::fs::read_to_string(filename.clone())?;
+            for (i, line) in contents.lines().enumerate() {
+                if f.matches(&get_tags_from_string(&line)) {
+                    vimstrings.push(format!("{}:{}:{}", filename, i + 1, line));
+                }
+            }
+        }
+        writeln!(&mut std::io::stdout(), "{}", vimstrings.join("\n"))?;
     } else {
         writeln!(
             &mut std::io::stdout(),
