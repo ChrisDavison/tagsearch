@@ -50,6 +50,9 @@ enum Commands {
         /// Output in long format (tree-like)
         #[clap(short, long)]
         long: bool,
+        /// Stop 'tree' output in long list
+        #[clap(short, long)]
+        no_tree: bool,
     },
     /// Show files without tags
     Untagged {
@@ -90,12 +93,13 @@ fn try_main() -> Result<(), std::io::Error> {
             fuzzy,
             count,
             long,
+            no_tree,
         } => {
             let f = Filter::new(good.as_slice(), not.as_slice(), *or, *fuzzy);
             if *count {
                 display_tag_count(f, &files)
             } else {
-                display_tags(f, &files, *long)
+                display_tags(f, &files, *long, *no_tree)
             }
         }
         Commands::Untagged { vim } => display_untagged(&files, *vim),
@@ -166,12 +170,26 @@ fn display_files_matching_query(
     Ok(())
 }
 
-fn display_tags(f: Filter, files: &[String], long_list: bool) -> Result<(), std::io::Error> {
+fn display_tags(
+    f: Filter,
+    files: &[String],
+    long_list: bool,
+    no_tree: bool,
+) -> Result<(), std::io::Error> {
     // Convert the Btreeset into a vec
     let tags: Vec<Tag> = f.tags_matching_tag_query(files).iter().cloned().collect();
 
     if long_list {
-        writeln!(&mut std::io::stdout(), "{}", display_as_tree(&tags))?;
+        if !no_tree {
+            writeln!(&mut std::io::stdout(), "{}", display_as_tree(&tags))?;
+        } else {
+            let tags = tags
+                .iter()
+                .map(|tags| tags.join("/"))
+                .collect::<Vec<String>>()
+                .join("\n");
+            writeln!(&mut std::io::stdout(), "{}", tags)?;
+        }
     } else {
         let tags = tags
             .iter()
