@@ -19,7 +19,6 @@ pub struct Filter {
     good_keywords: Set<String>,
     bad_keywords: Set<String>,
     or_filter: bool,
-    fuzzy_match: bool,
 }
 
 #[derive(Eq, PartialEq)]
@@ -42,20 +41,14 @@ impl Filter {
     ///
     /// This simply takes the good and bad keywords and turns them into a
     /// vector. It also sets whether the filter is AND or OR-based.
-    pub fn new<S: AsRef<str>>(
-        keywords: &[S],
-        bad_keywords: &[S],
-        or_filter: bool,
-        fuzzy_match: bool,
-    ) -> Filter {
+    pub fn new<S: AsRef<str>>(keywords: &[S], bad_keywords: &[S], or_filter: bool) -> Filter {
         Filter {
-            good_keywords: keywords.iter().map(|x| x.as_ref().to_string()).collect(),
+            good_keywords: keywords.iter().map(|x| x.as_ref().to_lowercase()).collect(),
             bad_keywords: bad_keywords
                 .iter()
-                .map(|x| x.as_ref().to_string())
+                .map(|x| x.as_ref().to_lowercase())
                 .collect(),
             or_filter,
-            fuzzy_match,
         }
     }
 
@@ -67,14 +60,18 @@ impl Filter {
         let mut num_matching_tags: usize = 0;
         for heirarchicaltag in tags {
             for tag in heirarchicaltag {
-                if self.tag_matches(&self.bad_keywords, tag) {
+                let tag_l = tag.to_lowercase();
+                if self.tag_matches(&self.bad_keywords, &tag_l) {
                     return false;
                 }
-                if self.tag_matches(&self.good_keywords, tag) {
+                if self.tag_matches(&self.good_keywords, &tag_l) {
                     num_matching_tags += 1;
                 }
             }
-            if self.tag_matches(&self.good_keywords, &heirarchicaltag.join("/")) {
+            if self.tag_matches(
+                &self.good_keywords,
+                &heirarchicaltag.join("/").to_lowercase(),
+            ) {
                 num_matching_tags += 1;
             }
         }
@@ -88,11 +85,8 @@ impl Filter {
 
     #[inline(always)]
     fn tag_matches(&self, v: &Set<String>, t: &str) -> bool {
-        if self.fuzzy_match || t.contains('/') {
-            v.iter().any(|haystack| t.contains(&haystack.to_string()))
-        } else {
-            v.contains(&t.to_string())
-        }
+        v.iter()
+            .any(|haystack| t.contains(&haystack.to_lowercase()))
     }
 
     /// Extract ALL tags from files that match a filter
@@ -212,8 +206,20 @@ mod tests {
 
     #[test]
     fn match_good() {
-        let f = Filter::new(&["stoicism", "philosophy"], &[], false, false);
+        let f = Filter::new(&["stoicism", "philosophy"], &[], false);
         let tags_for_fake_file = ["stoicism", "philosophy"]
+            .iter()
+            .cloned()
+            .map(|x| vec![x.to_string()])
+            .collect::<Set<Vec<String>>>();
+
+        assert!(f.matches(&tags_for_fake_file));
+    }
+
+    #[test]
+    fn match_good_case_insensitive() {
+        let f = Filter::new(&["stoicism", "PHILOSOPHY"], &[], false);
+        let tags_for_fake_file = ["STOICISM", "pHiLoSOpHy"]
             .iter()
             .cloned()
             .map(|x| vec![x.to_string()])
@@ -224,7 +230,7 @@ mod tests {
 
     #[test]
     fn match_good_or() {
-        let f = Filter::new(&["stoicism", "philosophy"], &[], true, false);
+        let f = Filter::new(&["stoicism", "philosophy"], &[], true);
         let tags_for_fake_file = ["stoicism", "philosophy"]
             .iter()
             .cloned()
@@ -235,36 +241,13 @@ mod tests {
     }
 
     #[test]
-    fn match_good_fuzzy() {
-        let f = Filter::new(&["stoic"], &[], false, true);
-        let tags_for_fake_file = ["stoicism"]
-            .iter()
-            .cloned()
-            .map(|x| vec![x.to_string()])
-            .collect::<Set<Vec<String>>>();
-
-        assert!(f.matches(&tags_for_fake_file));
-    }
-
-    #[test]
     fn match_bad() {
-        let f = Filter::new(&[], &["donkey"], false, false);
+        let f = Filter::new(&[], &["donkey"], false);
         let tags_for_fake_file = ["stoicism", "philosophy", "donkey"]
             .iter()
             .cloned()
             .map(|x| vec![x.to_string()])
             .collect::<Set<Vec<String>>>();
-        assert!(!f.matches(&tags_for_fake_file));
-    }
-
-    #[test]
-    fn match_good_and_bad_fuzzy() {
-        let f = Filter::new(&["stoic"], &["donkey"], false, true);
-        let tags_for_fake_file = ["stoicism", "philosophy", "donkey"]
-            .iter()
-            .cloned()
-            .map(|x| vec![x.to_string()])
-            .collect();
         assert!(!f.matches(&tags_for_fake_file));
     }
 }

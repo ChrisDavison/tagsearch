@@ -24,9 +24,6 @@ enum Commands {
         /// Output in format suitable for vimgrep
         #[clap(long)]
         vim: bool,
-        /// Fuzzy-match on tag string
-        #[clap(short, long)]
-        fuzzy: bool,
         /// Match ANY, not ALL, tags
         #[clap(short, long)]
         or: bool,
@@ -38,9 +35,6 @@ enum Commands {
         #[clap(long, require_value_delimiter(true))]
         /// Keywords to NOT match
         not: Vec<String>,
-        #[clap(short, long)]
-        /// Fuzzy-match on tag string
-        fuzzy: bool,
         #[clap(short, long)]
         /// Match ANY, not ALL, tags
         or: bool,
@@ -76,26 +70,19 @@ fn try_main() -> Result<(), std::io::Error> {
     };
 
     match &cli.command {
-        Commands::Files {
-            good,
-            not,
-            vim,
-            or,
-            fuzzy,
-        } => {
-            let f = Filter::new(good.as_slice(), not.as_slice(), *or, *fuzzy);
+        Commands::Files { good, not, vim, or } => {
+            let f = Filter::new(good.as_slice(), not.as_slice(), *or);
             display_files_matching_query(f, &files, *vim)
         }
         Commands::Tags {
             good,
             not,
             or,
-            fuzzy,
             count,
             long,
             no_tree,
         } => {
-            let f = Filter::new(good.as_slice(), not.as_slice(), *or, *fuzzy);
+            let f = Filter::new(good.as_slice(), not.as_slice(), *or);
             if *count {
                 display_tag_count(f, &files)
             } else {

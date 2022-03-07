@@ -107,21 +107,7 @@ mod tests {
     }
 
     #[test]
-    fn display_as_tree__singletree_test() {
-        let output = String::from("philosophy\n    mindset\n    stoicism\n        quote\n");
-        let input = vec![
-            vec![
-                "philosophy".to_string(),
-                "stoicism".to_string(),
-                "quote".to_string(),
-            ],
-            vec!["philosophy".to_string(), "mindset".to_string()],
-        ];
-        assert_eq!(display_as_tree(&input), output);
-    }
-
-    #[test]
-    fn display_as_tree__doubletree_test() {
+    fn display_as_tree_test() {
         let output2 = String::from("completely\n    unrelated\n        heirarchy\nphilosophy\n    mindset\n    stoicism\n        quote\n");
         let input2 = vec![
             vec![
