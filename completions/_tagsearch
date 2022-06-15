@@ -1,0 +1,68 @@
+#compdef _tagsearch tagsearch
+
+function _tagsearch {
+    local line
+
+    _arguments -C \
+        "-h[Show help information]" \
+        "--help[Show help information]"\
+        "1: :((files\:'show files that match tags' similar\:'show possibly duplicate tags' tags\:'show all tags from files matching TAGS' untagged\:'show untagged files'))"\
+        "*::arg:->args"
+
+    case $line[1] in
+        files) _tagsearch_files ;;
+        similar|similar-tags) _tagsearch_similar_tags ;;
+        tags) _tagsearch_tags ;;
+        untagged) _tagsearch_untagged ;;
+    esac
+}
+
+function _tagsearch_files {
+    _arguments \
+        "-f[Fuzzy-match on tag string]"\
+        "--fuzzy[Fuzzy-match on tag string]"\
+        "-h[Print help information]"\
+        "--help[Print help information]"\
+        "--not=<NOT>...[Keywords to NOT match (last position)]"\
+        "-o[Match ANY, not ALL, tags]"\
+        "--or[Match ANY, not ALL, tags]"\
+        "-V[Print version information]"\
+        "--version[Print version information]"\
+        "--vim[Output in format suitable for vimgrep]"
+}
+
+function _tagsearch_similar_tags {
+    _arguments \
+        "-h[Print help information]"\
+        "--help[Print help information]"\
+        "-V[Print version information]"\
+        "--version[Print version information]"
+}
+
+function _tagsearch_tags {
+    _arguments \
+        "-c[Show how many times a tag is used]"\
+        "--count[Show how many times a tag is used]"\
+    "-f[Fuzzy-match on tag string]"\
+    "--fuzzy[Fuzzy-match on tag string]"\
+    "-h[Print help information]"\
+    "--help[Print help information]"\
+    "-l[Output in long format (tree-like)]"\
+    "--long[Output in long format (tree-like)]"\
+    "-n[Stop 'tree' output in long list]"\
+    "--no-tree[Stop 'tree' output in long list]"\
+    "--not=NOT...[Keywords to NOT match (should be last position)]" \
+    "-o[Match ANY, not ALL, tags]"\
+    "--or[Match ANY, not ALL, tags]"\
+    "-V[Print version information]"\
+    "--version[Print version information]"
+}
+
+function _tagsearch_untagged {
+    _arguments \
+        "--vim[Output in format suitable for vimgrep]" \
+        "-h[Print help information]"\
+        "--help[Print help information]" \
+        "-v[Print version]" \
+        "--version[Print version]"
+}
