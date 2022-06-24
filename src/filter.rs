@@ -204,50 +204,46 @@ impl Filter {
 mod tests {
     use super::*;
 
+    // This macro just streamlines the repetitive filter creation and set creation.
+    macro_rules! tag_match {
+        (good [$($good:literal),*] bad [$($bad:literal),*] file_tags [$($filetags:literal),+] $case:literal $negate:literal) => {
+            let f = Filter::new(&[$($good),*], &[$($bad),*], $case);
+
+            // Make every passed 'filetag' a vec![ft.to_string()]
+            // e.g. vec![ vec![ft1.to_string()], vec![ft2.to_string()] ...]
+            let tags_for_fake_file = [$(vec![$filetags.to_string()]),+]
+                .iter()
+                .cloned()
+                .collect::<Set<Vec<String>>>();
+
+            let matches = f.matches(&tags_for_fake_file);
+            let passes = if $negate { !matches } else {matches};
+            assert!(passes);
+        };
+        ([$($input:literal),+] - [$($bad:literal),*] or_matches [$($output:literal),+]) => {
+            tag_match!(good [$($input),*] bad [$($bad),*] file_tags [$($output),+] true false);
+        };
+        ([$($input:literal),*] - [$($bad:literal),*] matches [$($output:literal),+]) => {
+            tag_match!(good [$($input),*] bad [$($bad),*] file_tags [$($output),+] false false);
+        };
+        ([$($bad:literal),+] rejects [$($output:literal),+]) => {
+            tag_match!(good [] bad [$($bad),+] file_tags [$($output),+] true true);
+        };
+
+    }
+
     #[test]
     fn match_good() {
-        let f = Filter::new(&["stoicism", "philosophy"], &[], false);
-        let tags_for_fake_file = ["stoicism", "philosophy"]
-            .iter()
-            .cloned()
-            .map(|x| vec![x.to_string()])
-            .collect::<Set<Vec<String>>>();
-
-        assert!(f.matches(&tags_for_fake_file));
-    }
-
-    #[test]
-    fn match_good_case_insensitive() {
-        let f = Filter::new(&["stoicism", "PHILOSOPHY"], &[], false);
-        let tags_for_fake_file = ["STOICISM", "pHiLoSOpHy"]
-            .iter()
-            .cloned()
-            .map(|x| vec![x.to_string()])
-            .collect::<Set<Vec<String>>>();
-
-        assert!(f.matches(&tags_for_fake_file));
-    }
-
-    #[test]
-    fn match_good_or() {
-        let f = Filter::new(&["stoicism", "philosophy"], &[], true);
-        let tags_for_fake_file = ["stoicism", "philosophy"]
-            .iter()
-            .cloned()
-            .map(|x| vec![x.to_string()])
-            .collect::<Set<Vec<String>>>();
-
-        assert!(f.matches(&tags_for_fake_file));
+        tag_match!(["stoicism", "philosophy"] - [] matches ["stoicism", "philosophy"]);
+        tag_match!(["stoicism", "PHILOSOPHY"] - [] matches ["STOICISM", "pHiLoSOpHy"]);
+        tag_match!(["stoicism", "philosophy"] - [] or_matches ["stoicism", "philosophy"]);
+        tag_match!(["stoicism", "philosophy"] - [] or_matches ["stoicism"]);
+        tag_match!(["stoicism", "philosophy"] - [] or_matches ["philosophy"]);
+        tag_match!(["stoicism", "philosophy"] - ["donkey"] or_matches ["philosophy"]);
     }
 
     #[test]
     fn match_bad() {
-        let f = Filter::new(&[], &["donkey"], false);
-        let tags_for_fake_file = ["stoicism", "philosophy", "donkey"]
-            .iter()
-            .cloned()
-            .map(|x| vec![x.to_string()])
-            .collect::<Set<Vec<String>>>();
-        assert!(!f.matches(&tags_for_fake_file));
+        tag_match!(["donkey"] rejects ["stoicism", "philosophy", "donkey"]);
     }
 }
