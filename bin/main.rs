@@ -10,6 +10,8 @@ use clap::{Parser, Subcommand};
 struct Cli {
     #[clap(subcommand)]
     command: Commands,
+    #[clap(long)]
+    root: Option<String>,
 }
 
 #[derive(Subcommand)]
@@ -64,7 +66,7 @@ enum Commands {
 
 fn try_main() -> Result<(), std::io::Error> {
     let cli = Cli::parse();
-    let files = match get_files(None) {
+    let files = match get_files(cli.root) {
         Ok(files) => files,
         Err(e) => {
             println!("Error getting files: {}", e);
