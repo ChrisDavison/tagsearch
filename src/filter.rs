@@ -132,10 +132,9 @@ impl Filter {
     /// NOT be added to the result.
     pub fn similar_tags(&self, files: &[String]) -> Vec<Issue> {
         let mut tagset: Set<Tag> = Set::new();
-        for entry in files {
-            let heirarchicaltags = get_tags_for_file(entry);
-            tagset.extend(heirarchicaltags);
-        }
+        files.into_iter().for_each(|entry| {
+            tagset.extend(get_tags_for_file(entry));
+        });
         let mut similar = Vec::new();
         for ts1 in &tagset {
             for ts2 in &tagset {
