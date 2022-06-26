@@ -15,6 +15,7 @@ struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     /// Show files that have tags matching filter words
+    #[clap(aliases=&["f"])]
     Files {
         /// Keywords to match
         good: Vec<String>,
@@ -29,6 +30,7 @@ enum Commands {
         or: bool,
     },
     /// Show all tags from files with tags that match filter words
+    #[clap(aliases=&["t"])]
     Tags {
         /// Keywords to match
         good: Vec<String>,
@@ -49,13 +51,14 @@ enum Commands {
         no_tree: bool,
     },
     /// Show files without tags
+    #[clap(aliases=&["u"])]
     Untagged {
         /// Output in format suitable for vimgrep
         #[clap(long)]
         vim: bool,
     },
     /// Show tags that may be typos/slight differences
-    #[clap(aliases=&["similar", "related"])]
+    #[clap(aliases=&["similar", "related", "s"])]
     SimilarTags,
 }
 
