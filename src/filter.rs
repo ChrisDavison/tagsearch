@@ -132,7 +132,7 @@ impl Filter {
     /// NOT be added to the result.
     pub fn similar_tags(&self, files: &[String]) -> Vec<Issue> {
         let mut tagset: Set<Tag> = Set::new();
-        files.into_iter().for_each(|entry| {
+        files.iter().for_each(|entry| {
             tagset.extend(get_tags_for_file(entry));
         });
         let mut similar = Vec::new();
@@ -203,7 +203,7 @@ impl Filter {
 mod tests {
     use super::*;
 
-    // This macro just streamlines the repetitive filter creation and set creation.
+    /// This macro just streamlines the repetitive filter creation and set creation.
     macro_rules! tag_match {
         (good [$($good:literal),*] bad [$($bad:literal),*] file_tags [$($filetags:literal),+] $case:literal $negate:literal) => {
             let f = Filter::new(&[$($good),*], &[$($bad),*], $case);
