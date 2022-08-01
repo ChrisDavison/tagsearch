@@ -52,6 +52,21 @@ enum Commands {
         #[clap(short, long)]
         no_tree: bool,
     },
+    /// Show tags from specific files
+    #[clap(aliases=&["ft"])]
+    FileTags {
+        /// Show how many times tag used
+        #[clap(short, long)]
+        count: bool,
+        /// Output in long format (tree-like)
+        #[clap(short, long)]
+        long: bool,
+        /// Stop 'tree' output in long list
+        #[clap(short, long)]
+        no_tree: bool,
+        /// Files to extract tags from
+        files: Vec<String>,
+    },
     /// Show files without tags
     #[clap(aliases=&["u"])]
     Untagged {
@@ -88,6 +103,19 @@ fn try_main() -> Result<(), std::io::Error> {
             no_tree,
         } => {
             let f = Filter::new(good.as_slice(), not.as_slice(), *or);
+            if *count {
+                display_tag_count(f, &files)
+            } else {
+                display_tags(f, &files, *long, *no_tree)
+            }
+        }
+        Commands::FileTags {
+            count,
+            long,
+            no_tree,
+            files,
+        } => {
+            let f: Filter = Default::default();
             if *count {
                 display_tag_count(f, &files)
             } else {

@@ -97,7 +97,13 @@ impl Filter {
         files
             .par_iter()
             .map(|x| get_tags_for_file(x))
-            .filter(|x| self.matches(x))
+            .filter(|x| {
+                if !(self.good_keywords.is_empty() || self.bad_keywords.is_empty()) {
+                    self.matches(x)
+                } else {
+                    true
+                }
+            })
             .flatten()
             .collect()
     }
