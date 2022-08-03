@@ -175,7 +175,7 @@ fn display_files_matching_query(
                     continue;
                 }
                 if f.matches(&tags_in_line) {
-                    vimstrings.push(format!("{}:{}:{}", filename, i + 1, line));
+                    vimstrings.push(format!("{}:{}:1:{}", filename, i + 1, line));
                 }
             }
         }
