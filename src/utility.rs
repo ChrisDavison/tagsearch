@@ -1,11 +1,9 @@
-#![allow(dead_code, unused_mut, unused_variables)]
 use std::collections::BTreeSet as Set;
 use std::fs::File;
 use std::io::Read;
 
 use super::Tag;
 use glob::{glob, PatternError};
-use regex::Regex;
 
 /// Get all files from either a passed path or under the current directory.
 ///
@@ -43,23 +41,11 @@ pub fn get_tags_for_file(filename: &str) -> Set<Tag> {
     get_tags_from_string(&contents.clone())
 }
 
-pub fn get_tags_from_string(contents: &str) -> Set<Tag> {
-    lazy_static! {
-        static ref RE: Regex = Regex::new(r"(?:^|\s)@(?P<keyword>[a-zA-Z_0-9\-/]+)")
-            .expect("Couldn't create keyword regex");
-    }
-    let mut keywords = Set::new();
-    for cap in RE.captures_iter(contents) {
-        keywords.insert(parse_heirarchical_tag(&cap["keyword"]));
-    }
-    keywords
-}
-
 fn is_valid_tag_char(ch: char) -> bool {
     ch.is_alphanumeric() || ch == '-' || ch == '/'
 }
 
-pub fn get_tags_from_string_2(contents: &str) -> Set<Tag> {
+pub fn get_tags_from_string(contents: &str) -> Set<Tag> {
     let mut keywords = Set::new();
     for line in contents.lines() {
         let mut tag_started = false;
