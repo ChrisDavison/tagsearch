@@ -48,24 +48,20 @@ fn is_valid_tag_char(ch: char) -> bool {
 pub fn get_tags_from_string(contents: &str) -> Set<Tag> {
     let mut keywords = Set::new();
     for line in contents.lines() {
-        let mut tag_started = false;
-        let mut current = String::new();
-        for ch in line.chars() {
-            if !tag_started && ch == '@' {
-                tag_started = true;
+        for word in line.split_whitespace() {
+            if !word.starts_with('@') {
                 continue;
             }
-            if tag_started && is_valid_tag_char(ch) {
-                current.push(ch);
+            let mut is_valid = true;
+            for ch in word[1..].chars() {
+                if !is_valid_tag_char(ch) {
+                    is_valid = false;
+                    break;
+                }
             }
-            if tag_started && !is_valid_tag_char(ch) {
-                tag_started = false;
-                keywords.insert(parse_heirarchical_tag(&current));
-                current = String::new();
+            if is_valid {
+                keywords.insert(parse_heirarchical_tag(&word[1..]));
             }
-        }
-        if !current.is_empty() {
-            keywords.insert(parse_heirarchical_tag(&current));
         }
     }
     keywords
@@ -120,8 +116,6 @@ mod tests {
             .collect::<Set<Vec<String>>>();
         let input = "@a @b @c @d/e/f";
         assert_eq!(get_tags_from_string(input), output);
-
-        assert_eq!(get_tags_from_string_2(input), output);
     }
 
     #[test]
