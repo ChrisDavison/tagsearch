@@ -117,9 +117,9 @@ fn try_main() -> Result<(), std::io::Error> {
         } => {
             let f: Filter = Default::default();
             if *count {
-                display_tag_count(f, &files)
+                display_tag_count(f, files)
             } else {
-                display_tags(f, &files, *long, *no_tree)
+                display_tags(f, files, *long, *no_tree)
             }
         }
         Commands::Untagged { vim } => display_untagged(&files, *vim),

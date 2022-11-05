@@ -1,11 +1,9 @@
-#![allow(dead_code)]
 use std::collections::BTreeSet as Set;
 use std::fs::File;
 use std::io::Read;
 
 use super::Tag;
 use glob::{glob, PatternError};
-use regex::Regex;
 
 /// Get all files from either a passed path or under the current directory.
 ///
@@ -43,14 +41,28 @@ pub fn get_tags_for_file(filename: &str) -> Set<Tag> {
     get_tags_from_string(&contents.clone())
 }
 
+fn is_valid_tag_char(ch: char) -> bool {
+    ch.is_alphanumeric() || ch == '-' || ch == '/'
+}
+
 pub fn get_tags_from_string(contents: &str) -> Set<Tag> {
-    lazy_static! {
-        static ref RE: Regex = Regex::new(r"(?:^|\s)@(?P<keyword>[a-zA-Z_0-9\-/]+)")
-            .expect("Couldn't create keyword regex");
-    }
     let mut keywords = Set::new();
-    for cap in RE.captures_iter(contents) {
-        keywords.insert(parse_heirarchical_tag(&cap["keyword"]));
+    for line in contents.lines() {
+        for word in line.split_whitespace() {
+            if !word.starts_with('@') {
+                continue;
+            }
+            let mut is_valid = true;
+            for ch in word[1..].chars() {
+                if !is_valid_tag_char(ch) {
+                    is_valid = false;
+                    break;
+                }
+            }
+            if is_valid {
+                keywords.insert(parse_heirarchical_tag(&word[1..]));
+            }
+        }
     }
     keywords
 }
