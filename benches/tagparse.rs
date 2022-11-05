@@ -1,7 +1,4 @@
-#[macro_use]
-extern crate bencher;
-
-use bencher::Bencher;
+use criterion::{criterion_group, criterion_main, Criterion};
 use tagsearch::utility::*;
 
 // Tags generated randomly with python from /usr/share/dict/words
@@ -11,14 +8,14 @@ use tagsearch::utility::*;
 const MEDIUM_TAG_FILE: &str = include_str!("../medium-tag-file.md");
 const TALL_TAG_FILE: &str = include_str!("../tall-narrow-tag-file.md");
 
-fn bench_get_tags_medium(b: &mut Bencher) {
-    b.iter(|| get_tags_from_string(MEDIUM_TAG_FILE));
+fn criterion_benchmark(c: &mut Criterion) {
+    c.bench_function("Get tags from short, fat file", |b| {
+        b.iter(|| get_tags_from_string(MEDIUM_TAG_FILE))
+    });
+    c.bench_function("Get tags from tall, skinny file", |b| {
+        b.iter(|| get_tags_from_string(TALL_TAG_FILE))
+    });
 }
 
-fn bench_get_tags_tall(b: &mut Bencher) {
-    b.iter(|| get_tags_from_string(TALL_TAG_FILE));
-}
-
-benchmark_group!(benches, bench_get_tags_medium, bench_get_tags_tall,);
-
-benchmark_main!(benches);
+criterion_group!(benches, criterion_benchmark);
+criterion_main!(benches);
