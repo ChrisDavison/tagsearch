@@ -59,7 +59,7 @@ pub fn get_tags_from_string(contents: &str) -> Set<Tag> {
                     break;
                 }
             }
-            if is_valid {
+            if is_valid && !word[1..].is_empty() {
                 keywords.insert(parse_heirarchical_tag(&word[1..]));
             }
         }
