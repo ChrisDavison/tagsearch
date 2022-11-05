@@ -1,4 +1,4 @@
-#![allow(dead_code)]
+#![allow(dead_code, unused_mut, unused_variables)]
 use std::collections::BTreeSet as Set;
 use std::fs::File;
 use std::io::Read;
@@ -55,6 +55,36 @@ pub fn get_tags_from_string(contents: &str) -> Set<Tag> {
     keywords
 }
 
+fn is_valid_tag_char(ch: char) -> bool {
+    ch.is_alphanumeric() || ch == '-' || ch == '/'
+}
+
+pub fn get_tags_from_string_2(contents: &str) -> Set<Tag> {
+    let mut keywords = Set::new();
+    for line in contents.lines() {
+        let mut tag_started = false;
+        let mut current = String::new();
+        for ch in line.chars() {
+            if !tag_started && ch == '@' {
+                tag_started = true;
+                continue;
+            }
+            if tag_started && is_valid_tag_char(ch) {
+                current.push(ch);
+            }
+            if tag_started && !is_valid_tag_char(ch) {
+                tag_started = false;
+                keywords.insert(parse_heirarchical_tag(&current));
+                current = String::new();
+            }
+        }
+        if !current.is_empty() {
+            keywords.insert(parse_heirarchical_tag(&current));
+        }
+    }
+    keywords
+}
+
 pub fn display_as_tree(heirarchy: &[Tag]) -> String {
     let mut heirarchy: Vec<Tag> = heirarchy.to_vec();
     heirarchy.sort();
@@ -104,6 +134,8 @@ mod tests {
             .collect::<Set<Vec<String>>>();
         let input = "@a @b @c @d/e/f";
         assert_eq!(get_tags_from_string(input), output);
+
+        assert_eq!(get_tags_from_string_2(input), output);
     }
 
     #[test]
