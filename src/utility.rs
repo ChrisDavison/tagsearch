@@ -5,6 +5,8 @@ use std::io::Read;
 use super::Tag;
 use glob::{glob, PatternError};
 
+const HEIRARCHY_SPLITTERS: [char; 2] = [':', '/'];
+
 /// Get all files from either a passed path or under the current directory.
 ///
 /// This will do a recursive glob for `.txt` and `.md` files. If the `root`
@@ -42,7 +44,7 @@ pub fn get_tags_for_file(filename: &str) -> Set<Tag> {
 }
 
 fn is_valid_tag_char(ch: char) -> bool {
-    ch.is_alphanumeric() || ch == '-' || ch == '/'
+    ch.is_alphanumeric() || ch == '-' || ch == '/' || ch == ':'
 }
 
 pub fn get_tags_from_string(contents: &str) -> Set<Tag> {
@@ -97,7 +99,7 @@ pub fn display_as_tree(heirarchy: &[Tag]) -> String {
 
 fn parse_heirarchical_tag(s: &str) -> Vec<String> {
     s.trim_start_matches('@')
-        .split('/')
+        .split(|c: char| HEIRARCHY_SPLITTERS.contains(&c))
         .map(|x| x.to_string())
         .collect::<Vec<String>>()
 }
