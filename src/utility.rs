@@ -44,7 +44,7 @@ pub fn get_tags_for_file(filename: &str) -> Set<Tag> {
 }
 
 fn is_valid_tag_char(ch: char) -> bool {
-    ch.is_alphanumeric() || ch == '-' || ch == '/' || ch == ':'
+    ch.is_alphanumeric() || "-/:_".contains(ch)
 }
 
 pub fn get_tags_from_string(contents: &str) -> Set<Tag> {
