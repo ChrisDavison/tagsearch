@@ -2,85 +2,83 @@ use std::io::Write;
 
 use tagsearch::{filter::Filter, utility::*, Tag};
 
-use clap::{Parser, Subcommand};
+use structopt::StructOpt;
 
-#[derive(Parser)]
-#[clap(author, version, about, long_about = None)]
-#[clap(propagate_version = true)]
+#[derive(StructOpt,Debug)]
 struct Cli {
-    #[clap(subcommand)]
+    #[structopt(subcommand)]
     command: Commands,
-    #[clap(long)]
+    #[structopt(long)]
     root: Option<String>,
 }
 
-#[derive(Subcommand)]
+#[derive(StructOpt,Debug)]
 enum Commands {
     /// Show files that have tags matching filter words
-    #[clap(aliases=&["f"])]
+    #[structopt(aliases=&["f"])]
     Files {
         /// Keywords to match
         good: Vec<String>,
-        #[clap(long, require_value_delimiter(true))]
+        #[structopt(long, require_delimiter(true))]
         /// Keywords to NOT match
         not: Vec<String>,
         /// Output in format suitable for vimgrep
-        #[clap(long)]
+        #[structopt(long)]
         vim: bool,
         /// Match ANY, not ALL, tags
-        #[clap(short, long)]
+        #[structopt(short, long)]
         or: bool,
     },
     /// Show all tags from files with tags that match filter words
-    #[clap(aliases=&["t"])]
+    #[structopt(aliases=&["t"])]
     Tags {
         /// Keywords to match
         good: Vec<String>,
-        #[clap(long, require_value_delimiter(true))]
+        #[structopt(long, require_delimiter(true))]
         /// Keywords to NOT match
         not: Vec<String>,
-        #[clap(short, long)]
+        #[structopt(short, long)]
         /// Match ANY, not ALL, tags
         or: bool,
         /// Show how many times tag used
-        #[clap(short, long)]
+        #[structopt(short, long)]
         count: bool,
         /// Output in long format (tree-like)
-        #[clap(short, long)]
+        #[structopt(short, long)]
         long: bool,
         /// Stop 'tree' output in long list
-        #[clap(short, long)]
+        #[structopt(short, long)]
         no_tree: bool,
     },
     /// Show tags from specific files
-    #[clap(aliases=&["ft"])]
+    #[structopt(aliases=&["ft"])]
     FileTags {
         /// Show how many times tag used
-        #[clap(short, long)]
+        #[structopt(short, long)]
         count: bool,
         /// Output in long format (tree-like)
-        #[clap(short, long)]
+        #[structopt(short, long)]
         long: bool,
         /// Stop 'tree' output in long list
-        #[clap(short, long)]
+        #[structopt(short, long)]
         no_tree: bool,
         /// Files to extract tags from
         files: Vec<String>,
     },
     /// Show files without tags
-    #[clap(aliases=&["u"])]
+    #[structopt(aliases=&["u"])]
     Untagged {
         /// Output in format suitable for vimgrep
-        #[clap(long)]
+        #[structopt(long)]
         vim: bool,
     },
     /// Show tags that may be typos/slight differences
-    #[clap(aliases=&["similar", "related", "s"])]
+    #[structopt(aliases=&["similar", "related", "s"])]
     SimilarTags,
 }
 
 fn try_main() -> Result<(), std::io::Error> {
-    let cli = Cli::parse();
+    let cli = Cli::from_args();
     let files = match get_files(cli.root) {
         Ok(files) => files,
         Err(e) => {
@@ -89,10 +87,10 @@ fn try_main() -> Result<(), std::io::Error> {
         }
     };
 
-    match &cli.command {
+    match cli.command {
         Commands::Files { good, not, vim, or } => {
-            let f = Filter::new(good.as_slice(), not.as_slice(), *or);
-            display_files_matching_query(f, &files, *vim)
+            let f = Filter::new(good.as_slice(), not.as_slice(), or);
+            display_files_matching_query(f, &files, vim)
         }
         Commands::Tags {
             good,
@@ -102,11 +100,11 @@ fn try_main() -> Result<(), std::io::Error> {
             long,
             no_tree,
         } => {
-            let f = Filter::new(good.as_slice(), not.as_slice(), *or);
-            if *count {
+            let f = Filter::new(good.as_slice(), not.as_slice(), or);
+            if count {
                 display_tag_count(f, &files)
             } else {
-                display_tags(f, &files, *long, *no_tree)
+                display_tags(f, &files, long, no_tree)
             }
         }
         Commands::FileTags {
@@ -116,13 +114,13 @@ fn try_main() -> Result<(), std::io::Error> {
             files,
         } => {
             let f: Filter = Default::default();
-            if *count {
-                display_tag_count(f, files)
+            if count {
+                display_tag_count(f, &files)
             } else {
-                display_tags(f, files, *long, *no_tree)
+                display_tags(f, &files, long, no_tree)
             }
         }
-        Commands::Untagged { vim } => display_untagged(&files, *vim),
+        Commands::Untagged { vim } => display_untagged(&files, vim),
         Commands::SimilarTags => display_similar_tags(&files),
     }
 }
