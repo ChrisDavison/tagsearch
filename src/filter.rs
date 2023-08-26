@@ -15,9 +15,9 @@ use rayon::prelude::*;
 /// where a file will be returned if ANY good word matches the file and NO
 /// bad words match.
 #[derive(Debug, Default)]
-pub struct Filter {
-    good_keywords: Set<String>,
-    bad_keywords: Set<String>,
+pub struct Filter<'a> {
+    good_keywords: Set<&'a str>,
+    bad_keywords: Set<&'a str>,
     or_filter: bool,
 }
 
@@ -36,18 +36,15 @@ impl std::fmt::Display for Issue {
     }
 }
 
-impl Filter {
+impl <'a>Filter<'a> {
     /// Create a new `Filter`
     ///
     /// This simply takes the good and bad keywords and turns them into a
     /// vector. It also sets whether the filter is AND or OR-based.
-    pub fn new<S: AsRef<str>>(keywords: &[S], bad_keywords: &[S], or_filter: bool) -> Filter {
+    pub fn new<S: AsRef<str>>(keywords: &'a [S], bad_keywords: &'a [S], or_filter: bool) -> Filter<'a> {
         Filter {
-            good_keywords: keywords.iter().map(|x| x.as_ref().to_lowercase()).collect(),
-            bad_keywords: bad_keywords
-                .iter()
-                .map(|x| x.as_ref().to_lowercase())
-                .collect(),
+            good_keywords: keywords.iter().map(|x| x.as_ref()).collect(),
+            bad_keywords: bad_keywords.iter().map(|x| x.as_ref()).collect(),
             or_filter,
         }
     }
@@ -84,7 +81,7 @@ impl Filter {
     }
 
     #[inline(always)]
-    fn tag_matches(&self, v: &Set<String>, t: &str) -> bool {
+    fn tag_matches(&self, v: &Set<&str>, t: &str) -> bool {
         v.iter()
             .any(|haystack| t.contains(&haystack.to_lowercase()))
     }
