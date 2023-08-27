@@ -40,7 +40,7 @@ pub fn get_tags_for_file(filename: &str) -> Set<Tag> {
     let mut contents = String::new();
     file.read_to_string(&mut contents)
         .unwrap_or_else(|_| panic!("Couldn't read contents of file: `{:?}`", filename));
-    get_tags_from_string(&contents.clone())
+    get_tags_from_string(&contents)
 }
 
 fn is_valid_tag_char(ch: char) -> bool {
