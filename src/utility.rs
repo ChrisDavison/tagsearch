@@ -13,10 +13,7 @@ const HEIRARCHY_SPLITTERS: [char; 2] = [':', '/'];
 /// argument is `None`, then the current directory will be used; otherwise,
 /// the given path will be used.
 pub fn get_files(root: Option<String>) -> Result<Vec<String>, PatternError> {
-    let dir = match root {
-        Some(d) => d,
-        None => ".".to_string(),
-    };
+    let dir = root.unwrap_or(".".to_string());
     let mut files = Vec::new();
     let txts = glob(&format!("{}/**/*.txt", dir))?;
     let mds = glob(&format!("{}/**/*.md", dir))?;
