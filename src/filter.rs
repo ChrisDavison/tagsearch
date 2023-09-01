@@ -171,10 +171,10 @@ impl<'a> Filter<'a> {
             }
             if key.to_lowercase() == key2.to_lowercase() {
                 // Ensure we don't add B-A if we've flagged A-B
-                return Some(Issue::Case(key.to_string(), key2.to_string()));
+                return Some(Issue::Case(t1.join("/").to_string(), t2.join("/").to_string()));
             } else if key.trim_end_matches('s') == key2.trim_end_matches('s') {
                 // Ensure we don't add B-A if we've flagged A-B
-                return Some(Issue::Plural(key.to_string(), key2.to_string()));
+                return Some(Issue::Plural(t1.join("/").to_string(), t2.join("/").to_string()));
             }
         }
         None
