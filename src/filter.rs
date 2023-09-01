@@ -21,7 +21,8 @@ pub struct Filter<'a> {
     or_filter: bool,
 }
 
-#[derive(Eq, PartialEq)]
+// TODO change issue to contain Tag instead of String
+#[derive(Eq, PartialEq,Debug)]
 pub enum Issue {
     Plural(String, String),
     Case(String, String),
@@ -36,12 +37,16 @@ impl std::fmt::Display for Issue {
     }
 }
 
-impl <'a>Filter<'a> {
+impl<'a> Filter<'a> {
     /// Create a new `Filter`
     ///
     /// This simply takes the good and bad keywords and turns them into a
     /// vector. It also sets whether the filter is AND or OR-based.
-    pub fn new<S: AsRef<str>>(keywords: &'a [S], bad_keywords: &'a [S], or_filter: bool) -> Filter<'a> {
+    pub fn new<S: AsRef<str>>(
+        keywords: &'a [S],
+        bad_keywords: &'a [S],
+        or_filter: bool,
+    ) -> Filter<'a> {
         Filter {
             good_keywords: keywords.iter().map(|x| x.as_ref()).collect(),
             bad_keywords: bad_keywords.iter().map(|x| x.as_ref()).collect(),
@@ -53,8 +58,14 @@ impl <'a>Filter<'a> {
     ///
     /// This takes a bunch of tags that have been pulled from a file, and
     /// checks if the good and bad keywords match.
+    ///
+    /// TODO probably want to use a set here to make sure I'm matching all terms
+    /// rather than just asuming that if I have more matches than good keywords that it's good.
+    /// ...if so, how do I handle heirarchical tags?
+    /// ...only look for the sub-words of the heirarchy, or count it as both?
     pub fn matches(&self, tags: &Set<Tag>) -> bool {
         let mut num_matching_tags: usize = 0;
+        // Here 'tags' is what we've pulled from the file
         for heirarchicaltag in tags {
             for tag in heirarchicaltag {
                 let tag_l = tag.to_lowercase();
@@ -152,6 +163,8 @@ impl <'a>Filter<'a> {
     }
 
     fn compare_heirarchical_tags(t1: &Tag, t2: &Tag) -> Option<Issue> {
+        // Compare each component of the heirarchy
+        // rather than treating it as a single string
         for (key, key2) in t1.iter().zip(t2.iter()) {
             if key == key2 {
                 continue;
@@ -205,6 +218,7 @@ impl <'a>Filter<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::utility::parse_heirarchical_tag as tagparse;
 
     /// This macro just streamlines the repetitive filter creation and set creation.
     macro_rules! tag_match {
@@ -231,7 +245,24 @@ mod tests {
         ([$($bad:literal),+] rejects [$($output:literal),+]) => {
             tag_match!(good [] bad [$($bad),+] file_tags [$($output),+] true true);
         };
+    }
 
+    macro_rules! tag_compare {
+        (plural $first:literal is like $second:literal) => {
+            assert_eq!(
+                Filter::compare_heirarchical_tags(&tagparse($first), &tagparse($second)), 
+                Some(Issue::Plural($first.to_string(), $second.to_string())));
+        };
+        (lowercase $first:literal is like lowercase $second:literal) => {
+            assert_eq!(
+                Filter::compare_heirarchical_tags(&tagparse($first), &tagparse($second)), 
+                Some(Issue::Case($first.to_string(), $second.to_string())));
+        };
+        ($first:literal is not like $second:literal) => {
+            assert_eq!(
+                Filter::compare_heirarchical_tags(&tagparse($first), &tagparse($second)), 
+                None)
+        }
     }
 
     #[test]
@@ -247,5 +278,16 @@ mod tests {
     #[test]
     fn match_bad() {
         tag_match!(["donkey"] rejects ["stoicism", "philosophy", "donkey"]);
+    }
+
+    #[test]
+    fn compare_tags(){
+        tag_compare!(plural "as" is like "a");
+        tag_compare!(plural "a/b/cs" is like "a/b/c");
+        tag_compare!(plural "a/bs/c" is like "a/b/c");
+        tag_compare!(lowercase "A" is like lowercase "a");
+        tag_compare!(lowercase "A/b/c" is like lowercase "a/b/c");
+        tag_compare!(lowercase "a/B/c" is like lowercase "a/b/c");
+        tag_compare!("As" is not like "a");
     }
 }

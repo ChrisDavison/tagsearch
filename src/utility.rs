@@ -94,7 +94,7 @@ pub fn display_as_tree(heirarchy: &[Tag]) -> String {
     output
 }
 
-fn parse_heirarchical_tag(s: &str) -> Vec<String> {
+pub fn parse_heirarchical_tag(s: &str) -> Vec<String> {
     s.trim_start_matches('@')
         .split(|c: char| HEIRARCHY_SPLITTERS.contains(&c))
         .map(|x| x.to_string())
