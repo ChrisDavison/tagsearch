@@ -48,6 +48,10 @@ pub fn get_tags_from_string(contents: &str) -> Set<Tag> {
     let mut keywords = Set::new();
     for line in contents.lines() {
         for word in line.split_whitespace() {
+            let word = match word.strip_prefix("\u{feff}") {
+                Some(w) => w.to_string(),
+                None => word.to_string(),
+            };
             if !word.starts_with('@') {
                 continue;
             }
