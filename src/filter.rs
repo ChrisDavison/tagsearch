@@ -21,18 +21,17 @@ pub struct Filter<'a> {
     or_filter: bool,
 }
 
-// TODO change issue to contain Tag instead of String
-#[derive(Eq, PartialEq,Debug)]
+#[derive(Eq, PartialEq, Debug, Clone)]
 pub enum Issue {
-    Plural(String, String),
-    Case(String, String),
+    Plural(Tag, Tag),
+    Case(Tag, Tag),
 }
 
 impl std::fmt::Display for Issue {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
-            Issue::Plural(a, b) => write!(f, "Plural - {} & {}", a, b),
-            Issue::Case(a, b) => write!(f, "Case - {} & {}", a, b),
+            Issue::Plural(a, b) => write!(f, "Plural - {:?} & {:?}", a, b),
+            Issue::Case(a, b) => write!(f, "Case - {:?} & {:?}", a, b),
         }
     }
 }
@@ -152,9 +151,9 @@ impl<'a> Filter<'a> {
         let mut similar = Vec::new();
         for ts1 in &tagset {
             for ts2 in &tagset {
-                if let Some(issue) = Filter::compare_heirarchical_tags(ts1, ts2) {
+                if let Some(issue) = Filter::compare_heirarchical_tags(&ts1, &ts2) {
                     if !similar.contains(&issue) {
-                        similar.push(issue);
+                        similar.push(issue.clone());
                     }
                 }
             }
@@ -171,10 +170,10 @@ impl<'a> Filter<'a> {
             }
             if key.to_lowercase() == key2.to_lowercase() {
                 // Ensure we don't add B-A if we've flagged A-B
-                return Some(Issue::Case(t1.join("/").to_string(), t2.join("/").to_string()));
+                return Some(Issue::Case(t1.clone(), t2.clone()));
             } else if key.trim_end_matches('s') == key2.trim_end_matches('s') {
                 // Ensure we don't add B-A if we've flagged A-B
-                return Some(Issue::Plural(t1.join("/").to_string(), t2.join("/").to_string()));
+                return Some(Issue::Plural(t1.clone(), t2.clone()));
             }
         }
         None
@@ -249,20 +248,27 @@ mod tests {
 
     macro_rules! tag_compare {
         (plural $first:literal is like $second:literal) => {
+            let one = tagparse($first);
+            let two = tagparse($second);
             assert_eq!(
-                Filter::compare_heirarchical_tags(&tagparse($first), &tagparse($second)), 
-                Some(Issue::Plural($first.to_string(), $second.to_string())));
+                Filter::compare_heirarchical_tags(&one, &two),
+                Some(Issue::Plural(one, two))
+            );
         };
         (lowercase $first:literal is like lowercase $second:literal) => {
+            let one = tagparse($first);
+            let two = tagparse($second);
             assert_eq!(
-                Filter::compare_heirarchical_tags(&tagparse($first), &tagparse($second)), 
-                Some(Issue::Case($first.to_string(), $second.to_string())));
+                Filter::compare_heirarchical_tags(&one, &two),
+                Some(Issue::Case(one, two))
+            );
         };
         ($first:literal is not like $second:literal) => {
             assert_eq!(
-                Filter::compare_heirarchical_tags(&tagparse($first), &tagparse($second)), 
-                None)
-        }
+                Filter::compare_heirarchical_tags(&tagparse($first), &tagparse($second)),
+                None
+            )
+        };
     }
 
     #[test]
@@ -281,7 +287,7 @@ mod tests {
     }
 
     #[test]
-    fn compare_tags(){
+    fn compare_tags() {
         tag_compare!(plural "as" is like "a");
         tag_compare!(plural "a/b/cs" is like "a/b/c");
         tag_compare!(plural "a/bs/c" is like "a/b/c");

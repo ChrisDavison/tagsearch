@@ -52,7 +52,7 @@ pub fn get_tags_from_string(contents: &str) -> Set<Tag> {
                 Some(w) => w.to_string(),
                 None => word.to_string(),
             };
-            if !word.starts_with('@') {
+            if !(word.starts_with('@') || word.starts_with('#')) {
                 continue;
             }
             let mut is_valid = true;
@@ -100,6 +100,7 @@ pub fn display_as_tree(heirarchy: &[Tag]) -> String {
 
 pub fn parse_heirarchical_tag(s: &str) -> Vec<String> {
     s.trim_start_matches('@')
+        .trim_start_matches('#')
         .split(|c: char| HEIRARCHY_SPLITTERS.contains(&c))
         .map(|x| x.to_string())
         .collect::<Vec<String>>()
