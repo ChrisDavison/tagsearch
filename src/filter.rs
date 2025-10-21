@@ -126,15 +126,6 @@ impl<'a> Filter<'a> {
             .collect::<Vec<String>>()
     }
 
-    /// Get all files without tags
-    pub fn untagged_files(&self, files: &[String]) -> Vec<String> {
-        files
-            .par_iter()
-            .filter(|x| get_tags_for_file(x).is_empty())
-            .map(|x| x.to_string())
-            .collect()
-    }
-
     /// List possibly similar tags, based on some simple heuristics.
     ///
     /// This only does a simple test for case (i.e. upper vs lowercase) and

@@ -74,34 +74,6 @@ pub fn get_tags_from_string(contents: &str) -> Set<Tag> {
     keywords
 }
 
-pub fn display_as_tree(heirarchy: &[Tag]) -> String {
-    let mut heirarchy: Vec<Tag> = heirarchy.to_vec();
-    heirarchy.sort();
-    let mut path: Vec<String> = vec![];
-    let mut output = String::new();
-    for tagset in heirarchy {
-        // println!("NEW HEIRARCHY {:?}", tagset);
-        for (i, tag) in tagset.iter().enumerate() {
-            if let Some(t) = path.get(i) {
-                if t == tag {
-                    continue;
-                } else {
-                    while path.len() > i {
-                        // println!("UNWINDING {:?}", path);
-                        path.pop();
-                    }
-                    path.push(tag.to_string());
-                }
-            } else {
-                path.push(tag.to_string());
-            }
-            let indents = "    ".repeat(path.len() - 1);
-            output.push_str(&format!("{}{}\n", indents, path[path.len() - 1]));
-        }
-    }
-    output
-}
-
 pub fn parse_heirarchical_tag(s: &str) -> Vec<String> {
     s.trim_start_matches('@')
         .trim_start_matches('#')
@@ -124,25 +96,6 @@ mod tests {
             .collect::<Set<Vec<String>>>();
         let input = "@a @b @c @d/e/f";
         assert_eq!(get_tags_from_string(input), output);
-    }
-
-    #[test]
-    fn display_as_tree_test() {
-        let output2 = String::from("completely\n    unrelated\n        heirarchy\nphilosophy\n    mindset\n    stoicism\n        quote\n");
-        let input2 = vec![
-            vec![
-                "philosophy".to_string(),
-                "stoicism".to_string(),
-                "quote".to_string(),
-            ],
-            vec!["philosophy".to_string(), "mindset".to_string()],
-            vec![
-                "completely".to_string(),
-                "unrelated".to_string(),
-                "heirarchy".to_string(),
-            ],
-        ];
-        assert_eq!(display_as_tree(&input2), output2);
     }
 
     #[test]

@@ -1,5 +1,6 @@
 use std::io::Write;
 
+use rayon::prelude::*;
 use tagsearch::{filter::Filter, utility::*};
 
 use clap::Parser;
@@ -108,14 +109,19 @@ fn main() {
 }
 
 fn display_untagged(files: &[String], vim_format: bool) -> Result<(), std::io::Error> {
-    let f = Filter::default();
-    for fname in f.untagged_files(files) {
-        if vim_format {
-            writeln!(&mut std::io::stdout(), "{}:1:NO TAGS", fname)?;
-        } else {
-            writeln!(&mut std::io::stdout(), "{}", fname)?;
-        }
-    }
+    let untagged: String = files
+        .par_iter()
+        .filter(|x| get_tags_for_file(x).is_empty())
+        .map(|x| {
+            if vim_format {
+                format!("{}:1:NO TAGS", x)
+            } else {
+                x.to_string()
+            }
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+    writeln!(&mut std::io::stdout(), "{}:1:NO TAGS", untagged)?;
     Ok(())
 }
 
