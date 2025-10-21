@@ -44,6 +44,10 @@ fn is_valid_tag_char(ch: char) -> bool {
     ch.is_alphanumeric() || "-/:_".contains(ch)
 }
 
+fn only_numeric(s: &str) -> bool {
+    s.chars().all(|x| x.is_numeric())
+}
+
 pub fn get_tags_from_string(contents: &str) -> Set<Tag> {
     let mut keywords = Set::new();
     for line in contents.lines() {
@@ -62,7 +66,7 @@ pub fn get_tags_from_string(contents: &str) -> Set<Tag> {
                     break;
                 }
             }
-            if is_valid && !word[1..].is_empty() {
+            if is_valid && !word[1..].is_empty() && !only_numeric(&word[1..]) {
                 keywords.insert(parse_heirarchical_tag(&word[1..]));
             }
         }

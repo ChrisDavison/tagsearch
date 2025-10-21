@@ -151,7 +151,7 @@ impl<'a> Filter<'a> {
         let mut similar = Vec::new();
         for ts1 in &tagset {
             for ts2 in &tagset {
-                if let Some(issue) = Filter::compare_heirarchical_tags(&ts1, &ts2) {
+                if let Some(issue) = Filter::compare_heirarchical_tags(ts1, ts2) {
                     if !similar.contains(&issue) {
                         similar.push(issue.clone());
                     }

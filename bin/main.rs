@@ -1,84 +1,70 @@
 use std::io::Write;
 
-use tagsearch::{filter::Filter, utility::*, Tag};
+use tagsearch::{filter::Filter, utility::*};
 
-use structopt::StructOpt;
+use clap::Parser;
 
-#[derive(StructOpt,Debug)]
+#[derive(Parser, Debug)]
+#[command(version, about, long_about=None)]
 struct Cli {
-    #[structopt(subcommand)]
+    #[command(subcommand)]
     command: Commands,
-    #[structopt(long)]
+    #[arg(long)]
     root: Option<String>,
 }
 
-#[derive(StructOpt,Debug)]
+#[derive(Parser, Debug)]
 enum Commands {
     /// Show files that have tags matching filter words
-    #[structopt(aliases=&["f"])]
+    #[command(aliases=&["f"])]
     Files {
         /// Keywords to match
         good: Vec<String>,
-        #[structopt(long, require_delimiter(true))]
+        #[arg(long)]
         /// Keywords to NOT match
         not: Vec<String>,
         /// Output in format suitable for vimgrep
-        #[structopt(long)]
+        #[arg(long)]
         vim: bool,
         /// Match ANY, not ALL, tags
-        #[structopt(short, long)]
+        #[arg(short, long)]
         or: bool,
     },
     /// Show all tags from files with tags that match filter words
-    #[structopt(aliases=&["t"])]
+    #[command(aliases=&["t"])]
     Tags {
         /// Keywords to match
         good: Vec<String>,
-        #[structopt(long, require_delimiter(true))]
+        #[arg(long)]
         /// Keywords to NOT match
         not: Vec<String>,
-        #[structopt(short, long)]
+        #[arg(short, long)]
         /// Match ANY, not ALL, tags
         or: bool,
         /// Show how many times tag used
-        #[structopt(short, long)]
+        #[arg(short, long)]
         count: bool,
-        /// Output in long format (tree-like)
-        #[structopt(short, long)]
+        /// Output vertically
+        #[arg(short, long)]
         long: bool,
-        /// Stop 'tree' output in long list
-        #[structopt(short, long)]
-        no_tree: bool,
-    },
-    /// Show tags from specific files
-    #[structopt(aliases=&["ft"])]
-    FileTags {
-        /// Show how many times tag used
-        #[structopt(short, long)]
-        count: bool,
-        /// Output in long format (tree-like)
-        #[structopt(short, long)]
-        long: bool,
-        /// Stop 'tree' output in long list
-        #[structopt(short, long)]
-        no_tree: bool,
-        /// Files to extract tags from
-        files: Vec<String>,
+        /// Tags per-file
+        #[arg(long)]
+        per_file: bool,
     },
     /// Show files without tags
-    #[structopt(aliases=&["u"])]
+    #[command(aliases=&["u"])]
     Untagged {
         /// Output in format suitable for vimgrep
-        #[structopt(long)]
+        #[arg(long)]
         vim: bool,
     },
     /// Show tags that may be typos/slight differences
-    #[structopt(aliases=&["similar", "related", "s"])]
+    #[command(aliases=&["similar", "related", "s"])]
     SimilarTags,
 }
 
 fn try_main() -> Result<(), std::io::Error> {
-    let cli = Cli::from_args();
+    let cli = Cli::parse();
     let files = match get_files(cli.root) {
         Ok(files) => files,
         Err(e) => {
@@ -98,26 +84,13 @@ fn try_main() -> Result<(), std::io::Error> {
             or,
             count,
             long,
-            no_tree,
+            per_file,
         } => {
             let f = Filter::new(good.as_slice(), not.as_slice(), or);
             if count {
-                display_tag_count(f, &files)
+                display_tag_count(f, &files, per_file)
             } else {
-                display_tags(f, &files, long, no_tree)
-            }
-        }
-        Commands::FileTags {
-            count,
-            long,
-            no_tree,
-            files,
-        } => {
-            let f: Filter = Default::default();
-            if count {
-                display_tag_count(f, &files)
-            } else {
-                display_tags(f, &files, long, no_tree)
+                display_tags(f, &files, long, per_file)
             }
         }
         Commands::Untagged { vim } => display_untagged(&files, vim),
@@ -192,36 +165,58 @@ fn display_tags(
     f: Filter,
     files: &[String],
     long_list: bool,
-    no_tree: bool,
+    per_file: bool,
 ) -> Result<(), std::io::Error> {
     // Convert the Btreeset into a vec
-    let tags: Vec<Tag> = f.tags_matching_tag_query(files).iter().cloned().collect();
 
-    if long_list {
-        if !no_tree {
-            writeln!(&mut std::io::stdout(), "{}", display_as_tree(&tags))?;
-        } else {
-            let tags = tags
+    if per_file {
+        for fname in files {
+            let tags: Vec<String> = f
+                .tags_matching_tag_query(&[fname.to_string()])
                 .iter()
                 .map(|tags| tags.join("/"))
-                .collect::<Vec<String>>()
-                .join("\n");
-            writeln!(&mut std::io::stdout(), "{}", tags)?;
+                .collect();
+            if tags.is_empty() {
+                continue;
+            }
+            if long_list {
+                writeln!(&mut std::io::stdout(), "{}", fname)?;
+                for t in tags {
+                    writeln!(&mut std::io::stdout(), "- {}", t)?;
+                }
+                writeln!(&mut std::io::stdout(), "")?;
+            } else {
+                writeln!(&mut std::io::stdout(), "{}: {}", fname, tags.join(", "))?;
+            };
         }
     } else {
-        let tags = tags
+        let tags: Vec<String> = f
+            .tags_matching_tag_query(files)
             .iter()
             .map(|tags| tags.join("/"))
-            .collect::<Vec<String>>()
-            .join(", ");
-        writeln!(&mut std::io::stdout(), "{}", tags)?;
+            .collect();
+        let tagstr = if long_list {
+            tags.join("\n")
+        } else {
+            tags.join(", ")
+        };
+
+        writeln!(&mut std::io::stdout(), "{}", tagstr)?;
     }
     Ok(())
 }
 
-fn display_tag_count(f: Filter, files: &[String]) -> Result<(), std::io::Error> {
-    for (count, key) in f.count_of_tags(files) {
-        writeln!(&mut std::io::stdout(), "{:5} {}", count, key)?;
+fn display_tag_count(f: Filter, files: &[String], per_file: bool) -> Result<(), std::io::Error> {
+    if per_file {
+        for fname in files {
+            for (count, key) in f.count_of_tags(&[fname.to_string()]) {
+                writeln!(&mut std::io::stdout(), "{:5} {}", count, key)?;
+            }
+        }
+    } else {
+        for (count, key) in f.count_of_tags(files) {
+            writeln!(&mut std::io::stdout(), "{:5} {}", count, key)?;
+        }
     }
     Ok(())
 }
