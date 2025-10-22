@@ -205,7 +205,7 @@ fn display_tags(
                 for t in tags {
                     writeln!(&mut std::io::stdout(), "- {}", t)?;
                 }
-                writeln!(&mut std::io::stdout(), "")?;
+                writeln!(&mut std::io::stdout())?;
             } else {
                 writeln!(&mut std::io::stdout(), "{}: {}", fname, tags.join(", "))?;
             };

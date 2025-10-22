@@ -82,31 +82,79 @@ pub fn parse_heirarchical_tag(s: &str) -> Vec<String> {
         .collect::<Vec<String>>()
 }
 
+#[allow(dead_code)]
+fn parse_keywords(s: &str) -> (Vec<String>, Vec<String>) {
+    let mut good = Set::new();
+    let mut bad = Set::new();
+
+    for w in s.split_whitespace() {
+        match w.chars().next().unwrap() {
+            '-' | '!' => bad.insert(w[1..].to_string()),
+            _ => good.insert(w.to_string()),
+        };
+    }
+    (
+        good.iter().cloned().collect(),
+        bad.iter().cloned().collect(),
+    )
+}
+
 #[allow(unused_imports)]
 mod tests {
     use super::*;
     use std::collections::BTreeSet as Set;
 
+    #[allow(dead_code, unused_macros)]
+    macro_rules! svec {
+        ( $( $x:expr ),* ) => {
+        {
+            let mut temp_vec = Vec::new();
+            $(
+                temp_vec.push($x.to_string());
+            )*
+            temp_vec
+        }
+    };
+    }
+
+    #[allow(dead_code, unused_macros)]
+    macro_rules! set {
+        ( $( $x:expr ),* ) => {
+        {
+            let mut temp_set = Set::new();
+            $(
+                temp_set.insert($x);
+            )*
+            temp_set
+        }
+    };
+    }
+
     #[test]
     fn test_tags_from_string() {
-        let output = vec![vec!["a"], vec!["b"], vec!["c"], vec!["d", "e", "f"]]
-            .iter()
-            .cloned()
-            .map(|v| v.iter().map(|x| x.to_string()).collect())
-            .collect::<Set<Vec<String>>>();
+        let s = set![svec!["a"], svec!["b"], svec!["c"], svec!["d", "e", "f"]];
         let input = "@a @b @c @d/e/f";
-        assert_eq!(get_tags_from_string(input), output);
+        assert_eq!(get_tags_from_string(input), s);
     }
 
     #[test]
     fn test_parse_heirarchical_tag() {
-        let tests = vec![
-            ("@d/e/f", vec!["d", "e", "f"]),
-            ("@delta/gamma", vec!["delta", "gamma"]),
-            ("@single", vec!["single"]),
-        ];
-        for (inp, outp) in tests {
-            assert_eq!(parse_heirarchical_tag(inp), outp);
-        }
+        assert_eq!(parse_heirarchical_tag("@d/e/f"), vec!["d", "e", "f"]);
+        assert_eq!(parse_heirarchical_tag("@single"), vec!["single"]);
+        assert_eq!(
+            parse_heirarchical_tag("@delta/gamma"),
+            vec!["delta", "gamma"]
+        );
+    }
+
+    #[test]
+    fn test_parsing_filter() {
+        assert_eq!(parse_keywords("good -bad"), (svec!["good"], svec!["bad"]));
+        assert_eq!(parse_keywords("good !bad"), (svec!["good"], svec!["bad"]));
+        assert_eq!(parse_keywords("good good"), (svec!["good"], svec![]));
+        assert_eq!(
+            parse_keywords("good good -bad"),
+            (svec!["good"], svec!["bad"])
+        );
     }
 }
