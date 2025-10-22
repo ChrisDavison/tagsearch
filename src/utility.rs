@@ -82,21 +82,27 @@ pub fn parse_heirarchical_tag(s: &str) -> Vec<String> {
         .collect::<Vec<String>>()
 }
 
-#[allow(dead_code)]
-fn parse_keywords(s: &str) -> (Vec<String>, Vec<String>) {
-    let mut good = Set::new();
-    let mut bad = Set::new();
-
-    for w in s.split_whitespace() {
+pub fn parse_positionals(s: &[String]) -> (Vec<String>, Vec<String>, Vec<String>) {
+    let mut files = Vec::new();
+    let mut good = Vec::new();
+    let mut bad = Vec::new();
+    for w in s {
         match w.chars().next().unwrap() {
-            '-' | '!' => bad.insert(w[1..].to_string()),
-            _ => good.insert(w.to_string()),
-        };
+            '-' | '!' => bad.push(w[1..].to_string()),
+            '+' => good.push(w[1..].to_string()),
+            _ => {
+                if std::fs::exists(w).unwrap_or(false) {
+                    if std::path::PathBuf::from(w).is_dir() {
+                        files
+                            .extend_from_slice(&get_files(Some(w.to_string())).unwrap_or_default());
+                    } else {
+                        files.push(w.to_string());
+                    }
+                }
+            }
+        }
     }
-    (
-        good.iter().cloned().collect(),
-        bad.iter().cloned().collect(),
-    )
+    (files, good, bad)
 }
 
 #[allow(unused_imports)]
@@ -132,9 +138,19 @@ mod tests {
 
     #[test]
     fn test_tags_from_string() {
-        let s = set![svec!["a"], svec!["b"], svec!["c"], svec!["d", "e", "f"]];
         let input = "@a @b @c @d/e/f";
-        assert_eq!(get_tags_from_string(input), s);
+        assert_eq!(
+            get_tags_from_string(input),
+            vec![
+                vec!["a".to_string()],
+                vec!["b".to_string()],
+                vec!["c".to_string()],
+                vec!["d".to_string(), "e".to_string(), "f".to_string()],
+            ]
+            .iter()
+            .cloned()
+            .collect::<Set<_>>()
+        );
     }
 
     #[test]
@@ -148,13 +164,18 @@ mod tests {
     }
 
     #[test]
-    fn test_parsing_filter() {
-        assert_eq!(parse_keywords("good -bad"), (svec!["good"], svec!["bad"]));
-        assert_eq!(parse_keywords("good !bad"), (svec!["good"], svec!["bad"]));
-        assert_eq!(parse_keywords("good good"), (svec!["good"], svec![]));
+    fn test_parse_positionals() {
         assert_eq!(
-            parse_keywords("good good -bad"),
-            (svec!["good"], svec!["bad"])
+            parse_positionals(&[
+                "+good".to_string(),
+                "-bad".to_string(),
+                "README.md".to_string()
+            ]),
+            (
+                vec!["README.md".to_string()],
+                vec!["good".to_string()],
+                vec!["bad".to_string()]
+            )
         );
     }
 }

@@ -36,6 +36,24 @@ impl std::fmt::Display for Issue {
     }
 }
 
+fn compare_heirarchical_tags(t1: &Tag, t2: &Tag) -> Option<Issue> {
+    // Compare each component of the heirarchy
+    // rather than treating it as a single string
+    for (key, key2) in t1.iter().zip(t2.iter()) {
+        if key == key2 {
+            continue;
+        }
+        if key.to_lowercase() == key2.to_lowercase() {
+            // Ensure we don't add B-A if we've flagged A-B
+            return Some(Issue::Case(t1.clone(), t2.clone()));
+        } else if key.trim_end_matches('s') == key2.trim_end_matches('s') {
+            // Ensure we don't add B-A if we've flagged A-B
+            return Some(Issue::Plural(t1.clone(), t2.clone()));
+        }
+    }
+    None
+}
+
 impl<'a> Filter<'a> {
     /// Create a new `Filter`
     ///
@@ -90,7 +108,6 @@ impl<'a> Filter<'a> {
         num_matching_tags >= matches_required
     }
 
-    #[inline(always)]
     fn tag_matches(&self, v: &Set<&str>, t: &str) -> bool {
         v.iter()
             .any(|haystack| t.contains(&haystack.to_lowercase()))
@@ -142,7 +159,7 @@ impl<'a> Filter<'a> {
         let mut similar = Vec::new();
         for ts1 in &tagset {
             for ts2 in &tagset {
-                if let Some(issue) = Filter::compare_heirarchical_tags(ts1, ts2) {
+                if let Some(issue) = compare_heirarchical_tags(ts1, ts2) {
                     if !similar.contains(&issue) {
                         similar.push(issue.clone());
                     }
@@ -152,24 +169,6 @@ impl<'a> Filter<'a> {
         similar
     }
 
-    fn compare_heirarchical_tags(t1: &Tag, t2: &Tag) -> Option<Issue> {
-        // Compare each component of the heirarchy
-        // rather than treating it as a single string
-        for (key, key2) in t1.iter().zip(t2.iter()) {
-            if key == key2 {
-                continue;
-            }
-            if key.to_lowercase() == key2.to_lowercase() {
-                // Ensure we don't add B-A if we've flagged A-B
-                return Some(Issue::Case(t1.clone(), t2.clone()));
-            } else if key.trim_end_matches('s') == key2.trim_end_matches('s') {
-                // Ensure we don't add B-A if we've flagged A-B
-                return Some(Issue::Plural(t1.clone(), t2.clone()));
-            }
-        }
-        None
-    }
-
     /// Count the number of occurences of each tag
     ///
     /// This will count how many files each tag appears in. The returned
@@ -177,7 +176,11 @@ impl<'a> Filter<'a> {
     pub fn count_of_tags(&self, files: &[String]) -> Vec<(usize, String)> {
         let mut tagmap: Map<String, usize> = Map::new();
         for entry in files {
-            for tag in get_tags_for_file(entry) {
+            let tags = get_tags_for_file(entry);
+            if !self.matches(&tags) {
+                continue;
+            }
+            for tag in tags {
                 for subtag in &tag {
                     match tagmap.get_mut(subtag) {
                         Some(val) => *val += 1,
@@ -242,7 +245,7 @@ mod tests {
             let one = tagparse($first);
             let two = tagparse($second);
             assert_eq!(
-                Filter::compare_heirarchical_tags(&one, &two),
+                compare_heirarchical_tags(&one, &two),
                 Some(Issue::Plural(one, two))
             );
         };
@@ -250,13 +253,13 @@ mod tests {
             let one = tagparse($first);
             let two = tagparse($second);
             assert_eq!(
-                Filter::compare_heirarchical_tags(&one, &two),
+                compare_heirarchical_tags(&one, &two),
                 Some(Issue::Case(one, two))
             );
         };
         ($first:literal is not like $second:literal) => {
             assert_eq!(
-                Filter::compare_heirarchical_tags(&tagparse($first), &tagparse($second)),
+                compare_heirarchical_tags(&tagparse($first), &tagparse($second)),
                 None
             )
         };
