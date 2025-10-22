@@ -20,27 +20,31 @@ enum Commands {
     #[command(aliases=&["f"])]
     Files {
         /// Keywords to match
-        good: Vec<String>,
         #[arg(long)]
+        good: Vec<String>,
         /// Keywords to NOT match
+        #[arg(long)]
         not: Vec<String>,
         /// Output in format suitable for vimgrep
-        #[arg(long)]
         vim: bool,
+        #[arg(long)]
         /// Match ANY, not ALL, tags
         #[arg(short, long)]
         or: bool,
+        /// Files to process
+        files: Option<Vec<String>>,
     },
     /// Show all tags from files with tags that match filter words
     #[command(aliases=&["t"])]
     Tags {
         /// Keywords to match
-        good: Vec<String>,
         #[arg(long)]
+        good: Vec<String>,
         /// Keywords to NOT match
+        #[arg(long)]
         not: Vec<String>,
-        #[arg(short, long)]
         /// Match ANY, not ALL, tags
+        #[arg(short, long)]
         or: bool,
         /// Show how many times tag used
         #[arg(short, long)]
@@ -51,6 +55,8 @@ enum Commands {
         /// Tags per-file
         #[arg(long)]
         per_file: bool,
+        /// Files to process
+        files: Option<Vec<String>>,
     },
     /// Show files without tags
     #[command(aliases=&["u"])]
@@ -75,7 +81,14 @@ fn try_main() -> Result<(), std::io::Error> {
     };
 
     match cli.command {
-        Commands::Files { good, not, vim, or } => {
+        Commands::Files {
+            good,
+            not,
+            vim,
+            or,
+            files: files2,
+        } => {
+            let files = files2.unwrap_or(files);
             let f = Filter::new(good.as_slice(), not.as_slice(), or);
             display_files_matching_query(f, &files, vim)
         }
@@ -86,7 +99,9 @@ fn try_main() -> Result<(), std::io::Error> {
             count,
             long,
             per_file,
+            files: files2,
         } => {
+            let files = files2.unwrap_or(files);
             let f = Filter::new(good.as_slice(), not.as_slice(), or);
             if count {
                 display_tag_count(f, &files, per_file)
