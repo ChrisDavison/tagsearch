@@ -88,9 +88,6 @@ fn try_main() -> Result<(), std::io::Error> {
             } else {
                 (vec![], vec![], vec![])
             };
-            dbg!(&_files);
-            dbg!(&good);
-            dbg!(&not);
             let files = if _files.is_empty() {
                 files
             } else {
