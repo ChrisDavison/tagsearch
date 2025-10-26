@@ -115,13 +115,13 @@ fn main() {
 }
 
 fn display_untagged(files: &[String]) -> Result<(), std::io::Error> {
-    let untagged: String = files
+    let untagged = files
         .par_iter()
         .filter(|x| get_tags_for_file(x).is_empty())
         .cloned()
         .collect::<Vec<_>>()
         .join("\n");
-    writeln!(&mut std::io::stdout(), "{}:1:NO TAGS", untagged)?;
+    writeln!(&mut std::io::stdout(), "{untagged}")?;
     Ok(())
 }
 

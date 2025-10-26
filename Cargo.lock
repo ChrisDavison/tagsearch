@@ -664,7 +664,7 @@ dependencies = [
 
 [[package]]
 name = "tagsearch"
-version = "0.40.0"
+version = "0.40.1"
 dependencies = [
  "clap 4.5.50",
  "criterion",
